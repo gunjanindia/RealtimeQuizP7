@@ -335,6 +335,43 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .admin-url-form .button, .admin-login-form .button { min-height: 44px; }
 .admin-url-form > p { margin: 8px 0 0; color: #818ca1; font-size: 10px; }
 .admin-panel .form-error { padding-top: 8px; }
+.question-manager { margin-top: 27px; padding-top: 22px; border-top: 1px solid var(--line); }
+.question-manager-heading, .question-editor-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.question-manager-heading h3 { margin: 5px 0 0; font-size: 16px; font-weight: 600; }
+.question-manager-heading > span, .question-editor-card-heading > span:last-child { color: #8994a8; font: 9px var(--mono); }
+.question-manager-note { margin: 8px 0 17px; color: #818ca1; font-size: 10px; line-height: 1.5; }
+.question-editor-list { display: grid; gap: 12px; }
+.question-editor-card { min-width: 0; padding: 15px; border: 1px solid rgba(255,255,255,.09); border-radius: 7px; background: rgba(10,15,25,.28); }
+.question-card-number { color: var(--acid); font: 12px var(--mono); }
+.question-delete-button { color: #ff9eaa; }
+.question-delete-button:disabled { opacity: .4; cursor: not-allowed; }
+.question-editor-form { margin-top: 12px; }
+.question-prompt-label, .correct-options legend { display: block; margin-bottom: 7px; color: #a5adbd; font: 9px var(--mono); letter-spacing: .7px; }
+.question-prompt-input, .question-option-field input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0 11px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 4px;
+  outline: 0;
+  background: rgba(255,255,255,.045);
+  color: var(--paper);
+  font-size: 11px;
+}
+.question-prompt-input:focus, .question-option-field input:focus { border-color: var(--acid); box-shadow: 0 0 0 3px rgba(211,251,102,.08); }
+.question-option-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
+.question-option-field { display: flex; min-width: 0; align-items: center; gap: 8px; color: var(--acid); font: 10px var(--mono); }
+.question-option-field input { color: var(--paper); }
+.correct-options { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 13px 0; padding: 0; border: 0; }
+.correct-options legend { width: 100%; }
+.correct-option { display: inline-flex; align-items: center; gap: 6px; color: #abb4c4; font-size: 10px; cursor: pointer; }
+.correct-option input { accent-color: var(--acid); }
+.question-save-button { min-height: 38px; font-size: 10px; }
+.question-add-card { border-color: rgba(211,251,102,.17); }
+.question-add-card .question-editor-form { margin-top: 14px; }
+.question-prompt-input:disabled, .question-option-field input:disabled { opacity: .55; cursor: not-allowed; }
+.question-editor-form button:disabled { opacity: .5; cursor: not-allowed; }
 
 .participant-shell {
   width: min(470px, calc(100% - 36px));
@@ -497,6 +534,8 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .admin-panel { padding: 16px; }
   .admin-url-row { flex-direction: column; }
   .admin-url-row .button { width: 100%; }
+  .question-option-grid { grid-template-columns: 1fr; }
+  .question-editor-card { padding: 12px; }
   .participant-shell { width: calc(100% - 34px); padding-top: 19px; }
   .participant-title { margin-top: 51px; }
   .waiting-shell .participant-title { margin-top: 51px; }

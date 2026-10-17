@@ -122,9 +122,51 @@ function phaseLabel(phase) {
   return phase === "live" ? "Live now" : phase === "ended" ? "Quiz complete" : "Waiting to start";
 }
 
+function questionEditorForm(question, index, disabled = false) {
+  const options = question.options
+    .map(
+      (option, optionIndex) => `
+        <label class="question-option-field" for="question-${index}-option-${optionIndex}">
+          <span>${letters[optionIndex]}</span>
+          <input id="question-${index}-option-${optionIndex}" name="option${optionIndex}" type="text" maxlength="100" value="${escapeHtml(option)}" placeholder="Answer ${letters[optionIndex]}" required ${disabled ? "disabled" : ""} />
+        </label>`,
+    )
+    .join("");
+  const correctOptions = question.options
+    .map(
+      (_, optionIndex) => `
+        <label class="correct-option">
+          <input type="radio" name="correct" value="${optionIndex}" ${question.correct === optionIndex ? "checked" : ""} required ${disabled ? "disabled" : ""} />
+          <span>${letters[optionIndex]} is correct</span>
+        </label>`,
+    )
+    .join("");
+  return `
+    <form class="question-editor-form" data-index="${index}">
+      <label class="question-prompt-label" for="question-${index}-prompt">QUESTION ${typeof index === "number" ? index + 1 : ""}</label>
+      <input class="question-prompt-input" id="question-${index}-prompt" name="prompt" type="text" maxlength="240" value="${escapeHtml(question.prompt)}" placeholder="Enter the question" required ${disabled ? "disabled" : ""} />
+      <div class="question-option-grid">${options}</div>
+      <fieldset class="correct-options"><legend>SELECT THE CORRECT ANSWER</legend>${correctOptions}</fieldset>
+      <button class="button button-primary question-save-button" type="submit" ${disabled ? "disabled" : ""}>${typeof index === "number" ? "Save changes" : "Add question"}</button>
+    </form>`;
+}
+
 function renderDashboard(state) {
   const joinUrl = state.joinUrl;
   const joinHref = escapeHtml(joinUrl);
+  const questionsEnabled = state.phase === "lobby";
+  const questionCards = state.questions
+    .map(
+      (question, index) => `
+        <article class="question-editor-card">
+          <div class="question-editor-card-heading">
+            <span class="question-card-number">${String(index + 1).padStart(2, "0")}</span>
+            <button class="text-button question-delete-button" type="button" data-index="${index}" ${!questionsEnabled || state.questions.length === 1 ? "disabled" : ""}>Delete</button>
+          </div>
+          ${questionEditorForm(question, index, !questionsEnabled)}
+        </article>`,
+    )
+    .join("");
   const leaderboard = state.leaderboard.length
     ? state.leaderboard
         .slice(0, 8)
@@ -134,7 +176,7 @@ function renderDashboard(state) {
               <span class="leader-rank ${player.rank <= 3 ? "top-rank" : ""}">${String(player.rank).padStart(2, "0")}</span>
               <span class="leader-avatar">${escapeHtml(player.name.slice(0, 1).toUpperCase())}</span>
               <span class="leader-name">${escapeHtml(player.name)}</span>
-              <span class="leader-score">${player.score}<small> / 5</small></span>
+              <span class="leader-score">${player.score}<small> / ${state.questions.length}</small></span>
             </div>`,
         )
         .join("")
@@ -158,7 +200,7 @@ function renderDashboard(state) {
         <section class="intro">
           <div class="eyebrow"><span class="eyebrow-line"></span> THE ROOM IS YOURS</div>
           <h1>Let’s get<br /><span>quizzical.</span></h1>
-          <p class="intro-copy">One room. Five questions. Bragging rights<br class="desktop-break" /> for the winner.</p>
+          <p class="intro-copy">One room. ${state.questions.length} questions. Bragging rights<br class="desktop-break" /> for the winner.</p>
           <div class="control-row">
             ${
               state.isAdmin
@@ -169,7 +211,7 @@ function renderDashboard(state) {
                   </div>`
                 : `<span class="host-only-note">Host controls are admin-only</span>`
             }
-            <span class="quiz-length"><span class="length-dot"></span>5 questions <i>·</i> ~2 min</span>
+            <span class="quiz-length"><span class="length-dot"></span>${state.questions.length} questions</span>
           </div>
         </section>
 
@@ -236,6 +278,27 @@ function renderDashboard(state) {
                    <div class="admin-url-row"><input id="admin-password" name="password" type="password" autocomplete="current-password" required /><button class="button button-primary" type="submit">Sign in</button></div>
                    <div class="form-error" id="admin-error" role="alert"></div>
                  </form>`
+          }
+          ${
+            state.isAdmin
+              ? `<section class="question-manager">
+                   <div class="question-manager-heading">
+                     <div><div class="eyebrow">QUIZ CONTENT</div><h3>Manage questions</h3></div>
+                     <span>${state.questions.length} / 50</span>
+                   </div>
+                   <p class="question-manager-note">${questionsEnabled ? "Add or edit questions before the quiz starts. Every question has four choices." : "Question editing is locked during and after a quiz. Reset the quiz to make changes."}</p>
+                   <div class="question-editor-list">${questionCards}</div>
+                   ${
+                     questionsEnabled && state.questions.length < 50
+                       ? `<article class="question-editor-card question-add-card">
+                            <div class="question-editor-card-heading"><span class="question-card-number">+</span><span>NEW QUESTION</span></div>
+                            ${questionEditorForm({ prompt: "", options: ["", "", "", ""], correct: 0 }, "new")}
+                          </article>`
+                       : ""
+                   }
+                   <div class="form-error" id="question-error" role="alert"></div>
+                 </section>`
+              : ""
           }
         </section>
         <footer class="dashboard-footer"><span>MADE FOR THE MOMENT.</span><span>QUIZ NIGHT <i>©</i> 2026</span></footer>
@@ -331,6 +394,55 @@ function renderDashboard(state) {
       error.textContent = requestError.message;
     }
   });
+  document.querySelectorAll(".question-editor-form").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const index = event.currentTarget.dataset.index;
+      const question = {
+        prompt: formData.get("prompt"),
+        options: [0, 1, 2, 3].map((optionIndex) => formData.get(`option${optionIndex}`)),
+        correct: Number(formData.get("correct")),
+      };
+      try {
+        await request("/api/admin/questions", {
+          method: "POST",
+          body: JSON.stringify({
+            action: index === "new" ? "add" : "edit",
+            ...(index !== "new" ? { index: Number(index) } : {}),
+            question,
+          }),
+        });
+        await refreshDashboard();
+        document.querySelector("#admin-panel").hidden = false;
+        showToast(index === "new" ? "Question added." : "Question updated.");
+      } catch (error) {
+        document.querySelector("#question-error").textContent = error.message;
+      }
+    });
+  });
+  document.querySelectorAll(".question-delete-button").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const index = Number(button.dataset.index);
+      const confirmed = await confirmAction(
+        "Delete this question?",
+        "This removes the question and clears any waiting-room answers for this quiz.",
+        "Delete question",
+      );
+      if (!confirmed) return;
+      try {
+        await request("/api/admin/questions", {
+          method: "POST",
+          body: JSON.stringify({ action: "delete", index }),
+        });
+        await refreshDashboard();
+        document.querySelector("#admin-panel").hidden = false;
+        showToast("Question deleted.");
+      } catch (error) {
+        document.querySelector("#question-error").textContent = error.message;
+      }
+    });
+  });
   document.querySelector("#admin-logout")?.addEventListener("click", async () => {
     try {
       await request("/api/admin/logout", { method: "POST", body: "{}" });
@@ -362,7 +474,7 @@ function updateDashboardStats(state) {
             <span class="leader-rank ${player.rank <= 3 ? "top-rank" : ""}">${String(player.rank).padStart(2, "0")}</span>
             <span class="leader-avatar">${escapeHtml(player.name.slice(0, 1).toUpperCase())}</span>
             <span class="leader-name">${escapeHtml(player.name)}</span>
-            <span class="leader-score">${player.score}<small> / 5</small></span>
+            <span class="leader-score">${player.score}<small> / ${state.questions.length}</small></span>
           </div>`,
       )
       .join("");
@@ -374,7 +486,8 @@ async function refreshDashboard() {
   const dashboardChanged =
     latestState?.phase !== state.phase ||
     latestState?.isAdmin !== state.isAdmin ||
-    latestState?.joinUrl !== state.joinUrl;
+    latestState?.joinUrl !== state.joinUrl ||
+    JSON.stringify(latestState?.questions) !== JSON.stringify(state.questions);
   latestState = state;
   if (!app.querySelector(".dashboard-shell") || dashboardChanged) renderDashboard(state);
   else updateDashboardStats(state);

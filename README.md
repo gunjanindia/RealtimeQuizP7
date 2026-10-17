@@ -1,6 +1,6 @@
 # Quiz Night
 
-A single-page, live audience quiz. The presenter shares the QR code or join URL, starts the five-question quiz, and watches player, submitted-answer, and completion counts update live. Players get their score and answer review; the final leaderboard is ranked by score, then completion time.
+A single-page, live audience quiz. The presenter shares the QR code or join URL, starts the quiz, and watches player, submitted-answer, and completion counts update live. Players get their score and answer review; the final leaderboard is ranked by score, then completion time.
 
 ## Run it
 
@@ -19,7 +19,7 @@ $env:QUIZ_ADMIN_PASSWORD = "use-a-strong-private-passcode"
 npm start
 ```
 
-The admin dashboard has separate **Start quiz**, **Wrap quiz**, and **Reset quiz** controls. Wrapping asks for confirmation, stops answer submissions, and downloads an admin-only CSV scoresheet in leaderboard order, with each participant's answers and correctness by question, score, and total completion time. Participants who did not finish are included after the ranked finishers with their partial score and unanswered questions indicated. Reset also asks for confirmation, clears the current players, answers, and leaderboard, then returns the quiz to the lobby so another round can begin.
+The admin dashboard has separate **Start quiz**, **Wrap quiz**, and **Reset quiz** controls. Admins can also add, edit, and delete questions while the quiz is in the lobby. Each multiple-choice question has four options and one correct answer; quizzes support 1–50 questions. Question changes clear waiting-room answers and are saved in `quiz-config.json` locally or Redis on Vercel. Editing is locked while a quiz is live or ended; reset the quiz before changing questions. Wrapping asks for confirmation, stops answer submissions, and downloads an admin-only CSV scoresheet in leaderboard order, with each participant's answers and correctness by question, score, and total completion time. Participants who did not finish are included after the ranked finishers with their partial score and unanswered questions indicated. Reset also asks for confirmation, clears the current players, answers, and leaderboard, then returns the quiz to the lobby so another round can begin.
 
 Locally, admin sessions, participants, and answers are held in memory and reset when the server restarts. On Vercel, these are stored in Redis and shared by function instances. This starter app is designed for one active quiz room at a time.
 

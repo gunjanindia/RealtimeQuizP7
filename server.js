@@ -24,7 +24,7 @@ if (process.env.VERCEL && (!redisUrl || !process.env.QUIZ_ADMIN_PASSWORD)) {
 const redis = redisUrl ? new Redis({ url: redisUrl, token: redisToken }) : null;
 const REDIS_STATE_KEY = "realtime-quiz:state";
 const REDIS_LOCK_KEY = "realtime-quiz:state-lock";
-const questions = [
+const defaultQuestions = [
   {
     prompt: "Which planet is known as the Red Planet?",
     options: ["Venus", "Mars", "Jupiter", "Mercury"],
@@ -51,9 +51,40 @@ const questions = [
     correct: 1,
   },
 ];
+const MAX_QUESTIONS = 50;
+const OPTION_COUNT = 4;
+
+function normalizeQuestions(value) {
+  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_QUESTIONS) {
+    throw new Error(`A quiz must contain between 1 and ${MAX_QUESTIONS} questions.`);
+  }
+  return value.map((question, index) => {
+    if (!question || typeof question !== "object") {
+      throw new Error(`Question ${index + 1} is invalid.`);
+    }
+    const prompt = typeof question.prompt === "string" ? question.prompt.trim() : "";
+    const options = Array.isArray(question.options)
+      ? question.options.map((option) => (typeof option === "string" ? option.trim() : ""))
+      : [];
+    if (!prompt || prompt.length > 240) {
+      throw new Error(`Question ${index + 1} must have a prompt of 1 to 240 characters.`);
+    }
+    if (
+      options.length !== OPTION_COUNT ||
+      options.some((option) => !option || option.length > 100)
+    ) {
+      throw new Error(`Question ${index + 1} must have four answers of 1 to 100 characters each.`);
+    }
+    if (!Number.isInteger(question.correct) || question.correct < 0 || question.correct >= OPTION_COUNT) {
+      throw new Error(`Question ${index + 1} must have one correct answer selected.`);
+    }
+    return { prompt, options, correct: question.correct };
+  });
+}
 
 const participants = new Map();
 const adminSessions = new Set();
+let questions = defaultQuestions.map((question) => ({ ...question, options: [...question.options] }));
 let phase = "lobby";
 let startedAt = null;
 let roundId = 1;
@@ -62,19 +93,25 @@ let configuredJoinUrl = process.env.QUIZ_PUBLIC_URL
   ? normalizeJoinUrl(process.env.QUIZ_PUBLIC_URL)
   : null;
 
-if (!redis && !process.env.QUIZ_PUBLIC_URL) {
+if (!redis) {
   try {
     const savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-    if (typeof savedConfig.joinUrl !== "string") {
-      throw new Error("Saved quiz configuration must contain a joinUrl string.");
+    if (savedConfig.joinUrl !== undefined) {
+      if (typeof savedConfig.joinUrl !== "string") {
+        throw new Error("Saved quiz configuration must contain a joinUrl string.");
+      }
+      configuredJoinUrl = configuredJoinUrl || normalizeJoinUrl(savedConfig.joinUrl);
     }
-    configuredJoinUrl = normalizeJoinUrl(savedConfig.joinUrl);
+    if (savedConfig.questions !== undefined) {
+      questions = normalizeQuestions(savedConfig.questions);
+    }
   } catch (error) {
     if (error.code !== "ENOENT") {
       throw new Error(`Could not read ${CONFIG_FILE}: ${error.message}`);
     }
   }
 }
+questions = normalizeQuestions(questions);
 const initialJoinUrl = configuredJoinUrl;
 
 async function acquireStateLock() {
@@ -105,6 +142,7 @@ async function loadSharedState() {
     startedAt = null;
     roundId = 1;
     configuredJoinUrl = initialJoinUrl;
+    questions = normalizeQuestions(defaultQuestions);
     return;
   }
   const state = typeof stored === "string" ? JSON.parse(stored) : stored;
@@ -129,6 +167,7 @@ async function loadSharedState() {
   startedAt = state.startedAt;
   roundId = state.roundId;
   configuredJoinUrl = state.configuredJoinUrl;
+  questions = normalizeQuestions(state.questions || defaultQuestions);
 }
 
 async function saveSharedState() {
@@ -139,6 +178,7 @@ async function saveSharedState() {
       startedAt,
       roundId,
       configuredJoinUrl,
+      questions,
       participants: [...participants.values()],
       adminSessions: [...adminSessions],
     }),
@@ -216,7 +256,11 @@ function getState(participantId, isAdmin = false, request) {
     roundId,
     joinUrl: getJoinUrl(request),
     isAdmin,
-    questions: questions.map(({ prompt, options }) => ({ prompt, options })),
+    questions: questions.map(({ prompt, options, correct }) => ({
+      prompt,
+      options,
+      ...(isAdmin ? { correct } : {}),
+    })),
     participantCount: participants.size,
     submittedAnswers: [...participants.values()].reduce(
       (total, participant) =>
@@ -299,19 +343,65 @@ function normalizeJoinUrl(value) {
   return parsed.toString();
 }
 
-async function saveJoinUrl(value) {
-  const normalized = normalizeJoinUrl(value);
-  if (redis) {
-    configuredJoinUrl = normalized;
-    return;
-  }
+async function saveLocalConfig(joinUrl, questionList) {
+  if (redis) return;
   const temporaryFile = `${CONFIG_FILE}.tmp`;
-  await fs.promises.writeFile(temporaryFile, `${JSON.stringify({ joinUrl: normalized }, null, 2)}\n`, {
+  const config = {
+    ...(joinUrl ? { joinUrl } : {}),
+    questions: questionList,
+  };
+  await fs.promises.writeFile(temporaryFile, `${JSON.stringify(config, null, 2)}\n`, {
     encoding: "utf8",
     flag: "w",
   });
   await fs.promises.rename(temporaryFile, CONFIG_FILE);
+}
+
+async function saveJoinUrl(value) {
+  const normalized = normalizeJoinUrl(value);
+  await saveLocalConfig(normalized, questions);
   configuredJoinUrl = normalized;
+}
+
+async function updateQuestions(body) {
+  if (phase !== "lobby") {
+    return { status: 409, error: "Questions can only be changed while the quiz is in the lobby." };
+  }
+
+  let nextQuestions;
+  if (body.action === "add") {
+    if (questions.length >= MAX_QUESTIONS) {
+      return { status: 400, error: `A quiz can contain at most ${MAX_QUESTIONS} questions.` };
+    }
+    try {
+      nextQuestions = normalizeQuestions([...questions, body.question]);
+    } catch (error) {
+      return { status: 400, error: error.message };
+    }
+  } else if (body.action === "edit" || body.action === "delete") {
+    if (!Number.isInteger(body.index) || body.index < 0 || body.index >= questions.length) {
+      return { status: 400, error: "Choose a valid question to update." };
+    }
+    const updatedQuestions = [...questions];
+    if (body.action === "edit") updatedQuestions[body.index] = body.question;
+    else updatedQuestions.splice(body.index, 1);
+    try {
+      nextQuestions = normalizeQuestions(updatedQuestions);
+    } catch (error) {
+      return { status: 400, error: error.message };
+    }
+  } else {
+    return { status: 400, error: "Choose add, edit, or delete for a question." };
+  }
+
+  await saveLocalConfig(configuredJoinUrl, nextQuestions);
+  questions = nextQuestions;
+  participants.forEach((participant) => {
+    participant.answers = Array(questions.length).fill(null);
+    participant.completedAt = null;
+  });
+  roundId += 1;
+  return null;
 }
 
 function passwordsMatch(candidate) {
@@ -435,7 +525,7 @@ async function handleApiRequest(request, response, url) {
   }
 
   if (
-    ["/api/start", "/api/end", "/api/reset", "/api/admin/join-url"].includes(url.pathname) &&
+    ["/api/start", "/api/end", "/api/reset", "/api/admin/join-url", "/api/admin/questions"].includes(url.pathname) &&
     !isAdminRequest(request)
   ) {
     return json(response, 401, { error: "Admin passcode required." });
@@ -446,6 +536,12 @@ async function handleApiRequest(request, response, url) {
     body = await readBody(request);
   } catch (error) {
     return json(response, 400, { error: error.message });
+  }
+
+  if (url.pathname === "/api/admin/questions") {
+    const error = await updateQuestions(body);
+    if (error) return json(response, error.status, { error: error.error });
+    return json(response, 200, getState(undefined, true, request));
   }
 
   if (url.pathname === "/api/join") {
