@@ -25,9 +25,9 @@ Locally, admin sessions, participants, and answers are held in memory and reset 
 
 ## Deploy to Vercel
 
-This project supports Vercel's Node.js serverless functions and serves the files in `public/` as the static app. Vercel function instances do not share memory, so a Redis database is required to share participant, quiz, and admin-session state. The app uses Upstash Redis through the Vercel Marketplace integration.
+This project exports a Vercel-compatible Node.js request handler for the dashboard and APIs. Vercel function instances do not share memory, so a Redis database is required to share participant, quiz, and admin-session state. The app uses Upstash Redis through the Vercel Marketplace integration.
 
-1. Push the project to a Git provider and import it into Vercel. Use the project root as the root directory; no build command is needed.
+1. Push the project to a Git provider and import it into Vercel. Use the project root as the root directory and leave the build command empty.
 2. Add an Upstash Redis database from the Vercel Marketplace and connect it to this Vercel project.
 3. In **Project Settings → Environment Variables**, configure:
    - `QUIZ_PUBLIC_URL` — the full audience URL, such as `https://your-project.vercel.app/?join=1`.

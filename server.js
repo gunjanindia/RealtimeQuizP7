@@ -629,6 +629,55 @@ function serveFile(request, response, pathname) {
   });
 }
 
+async function vercelHandler(request, response) {
+  try {
+    const protocol = request.headers["x-forwarded-proto"] || "https";
+    const host = request.headers.host || process.env.VERCEL_URL || "localhost";
+    const url = new URL(request.url || "/", `${protocol.split(",")[0]}://${host}`);
+    if (url.pathname.startsWith("/api/")) {
+      await handleApi(request, response, url);
+      return;
+    }
+    if (request.method !== "GET") {
+      response.writeHead(405);
+      response.end("Method not allowed");
+      return;
+    }
+
+    const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+    const filePath = path.resolve(PUBLIC_DIR, `.${requestedPath}`);
+    if (!filePath.startsWith(`${PUBLIC_DIR}${path.sep}`)) {
+      response.writeHead(403);
+      response.end("Forbidden");
+      return;
+    }
+    let contents;
+    try {
+      contents = await fs.promises.readFile(filePath);
+    } catch (error) {
+      response.writeHead(error.code === "ENOENT" ? 404 : 500);
+      response.end(error.code === "ENOENT" ? "Not found" : "Could not read file");
+      return;
+    }
+    const contentTypes = {
+      ".html": "text/html; charset=utf-8",
+      ".css": "text/css; charset=utf-8",
+      ".js": "text/javascript; charset=utf-8",
+      ".svg": "image/svg+xml",
+    };
+    response.writeHead(200, {
+      "Content-Type": contentTypes[path.extname(filePath)] || "application/octet-stream",
+      "Cache-Control": "no-cache",
+    });
+    response.end(contents);
+  } catch (error) {
+    console.error("Request failed:", error);
+    if (!response.headersSent) {
+      json(response, 500, { error: "An unexpected server error occurred." });
+    }
+  }
+}
+
 if (require.main === module) {
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
@@ -662,4 +711,5 @@ if (require.main === module) {
   });
 }
 
-module.exports = { handleApi };
+module.exports = vercelHandler;
+module.exports.handleApi = handleApi;
