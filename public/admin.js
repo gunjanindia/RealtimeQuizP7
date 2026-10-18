@@ -9,6 +9,11 @@ let isSubmitting = false;
 let editingQuestionIndex = null;
 
 function getAdminToken() {
+  const urlToken = new URLSearchParams(window.location.search).get("token");
+  if (urlToken) {
+    localStorage.setItem(adminTokenKey, urlToken);
+    return urlToken;
+  }
   return localStorage.getItem(adminTokenKey) || sessionStorage.getItem(adminTokenKey) || "";
 }
 

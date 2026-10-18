@@ -184,17 +184,17 @@ function renderDashboard(state) {
   const joinHref = escapeHtml(joinUrl);
   const leaderboard = state.leaderboard.length
     ? state.leaderboard
-        .slice(0, 8)
-        .map(
-          (player) => `
+      .slice(0, 8)
+      .map(
+        (player) => `
             <div class="leader-row">
               <span class="leader-rank ${player.rank <= 3 ? "top-rank" : ""}">${String(player.rank).padStart(2, "0")}</span>
               <span class="leader-avatar">${escapeHtml(player.name.slice(0, 1).toUpperCase())}</span>
               <span class="leader-name">${escapeHtml(player.name)}</span>
               <span class="leader-score">${player.score}<small> / ${state.questions.length}</small></span>
             </div>`,
-        )
-        .join("")
+      )
+      .join("")
     : `<div class="empty-state"><span class="empty-icon">✳</span><p>Your top players will<br />show up here.</p></div>`;
 
   app.innerHTML = `
@@ -215,9 +215,8 @@ function renderDashboard(state) {
       </header>
 
       <main class="dashboard-main stage-mode">
-        ${
-          state.isAdmin
-            ? `<div class="host-quick-bar">
+        ${state.isAdmin
+      ? `<div class="host-quick-bar">
                 <div class="host-quick-info">
                   <span class="host-quick-badge">HOST MODE</span>
                   <span class="host-quick-round">Round #${state.roundId} · Live presenter controls</span>
@@ -229,8 +228,8 @@ function renderDashboard(state) {
                   <a class="button button-secondary host-admin-btn" href="/admin"><span>Admin Console</span><span class="button-arrow">→</span></a>
                 </div>
               </div>`
-            : ""
-        }
+      : ""
+    }
 
         <!-- 1. LIVE STATS ON TOP -->
         <section class="stage-stats-bar" aria-label="Live quiz telemetry">
@@ -447,7 +446,7 @@ function renderJoinForm(message = "") {
       <p class="participant-intro">Pick a name your friends will recognize.<br />The quiz will begin on the big screen.</p>
       <form class="join-form" id="join-form">
         <label for="player-name">YOUR NAME</label>
-        <input id="player-name" name="name" type="text" maxlength="24" autocomplete="nickname" placeholder="e.g. Quiz Khalifa" value="${escapeHtml(participantName)}" required />
+        <input id="player-name" name="name" type="text" maxlength="24" autocomplete="nickname" placeholder="e.g. Gunjan Kumar" value="${escapeHtml(participantName)}" required />
         <button class="button button-primary join-button" type="submit"><span>Join the room</span><span class="button-arrow">↗</span></button>
         <div class="form-error" role="alert">${escapeHtml(message)}</div>
       </form>
@@ -621,13 +620,13 @@ function renderParticipant(state, force = false) {
       <h1 class="question-title">${escapeHtml(question.prompt)}</h1>
       <div class="answer-options">
         ${question.options
-          .map(
-            (option, optionIndex) => `
+      .map(
+        (option, optionIndex) => `
               <button class="answer-option" type="button" data-option="${optionIndex}" aria-label="Answer ${letters[optionIndex]}: ${escapeHtml(option)}">
                 <span class="option-letter">${letters[optionIndex]}</span><span>${escapeHtml(option)}</span><span class="option-arrow">↗</span>
               </button>`,
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
       <div class="participant-note"><span>✳</span> Playing as <strong>${escapeHtml(participantName)}</strong></div>
     </main>`;
@@ -651,7 +650,7 @@ async function submitAnswer(questionIndex, optionIndex) {
   if (activePollController) {
     try {
       activePollController.abort();
-    } catch {}
+    } catch { }
     activePollController = null;
   }
 
@@ -743,7 +742,7 @@ async function refreshParticipant(force = false) {
   if (activePollController) {
     try {
       activePollController.abort();
-    } catch {}
+    } catch { }
   }
   activePollController = new AbortController();
   const currentController = activePollController;
