@@ -242,21 +242,23 @@ function renderLoginView(errorMessage = "") {
 
 function questionEditorForm(question, index, disabled = false) {
   const isNew = typeof index !== "number";
+  const scenarioNum = question.scenarioId || (isNew ? 1 : Math.floor(index / 4) + 1);
+  const typeKey = (question.type || "apply").toLowerCase();
+
   const options = question.options
     .map(
       (option, optionIndex) => `
         <label class="question-option-field" for="question-${index}-option-${optionIndex}">
           <span>${letters[optionIndex]}</span>
-          <input
+          <textarea
             id="question-${index}-option-${optionIndex}"
             name="option${optionIndex}"
-            type="text"
-            maxlength="100"
-            value="${escapeHtml(option)}"
-            placeholder="Answer ${letters[optionIndex]}"
+            rows="2"
+            maxlength="500"
+            placeholder="Option ${letters[optionIndex]} text"
             required
             ${disabled ? "disabled" : ""}
-          />
+          >${escapeHtml(option)}</textarea>
         </label>`,
     )
     .join("");
@@ -280,23 +282,116 @@ function questionEditorForm(question, index, disabled = false) {
 
   return `
     <form class="question-editor-form" data-index="${index}">
-      <label class="question-prompt-label" for="question-${index}-prompt">QUESTION PROMPT</label>
+      <div class="editor-grid-2">
+        <div>
+          <label class="question-prompt-label" for="question-${index}-scenarioId">SCENARIO NUMBER (1–6)</label>
+          <input
+            class="question-prompt-input"
+            id="question-${index}-scenarioId"
+            name="scenarioId"
+            type="number"
+            min="1"
+            max="20"
+            value="${scenarioNum}"
+            required
+            ${disabled ? "disabled" : ""}
+          />
+        </div>
+        <div>
+          <label class="question-prompt-label" for="question-${index}-type">QUESTION TYPE</label>
+          <select
+            class="question-prompt-input question-select"
+            id="question-${index}-type"
+            name="type"
+            ${disabled ? "disabled" : ""}
+          >
+            <option value="apply" ${typeKey === "apply" ? "selected" : ""}>Apply (Practical Application)</option>
+            <option value="law" ${typeKey === "law" ? "selected" : ""}>Law (Statutory Provisions)</option>
+            <option value="evidence" ${typeKey === "evidence" ? "selected" : ""}>Evidence (Digital Trail)</option>
+            <option value="precaution" ${typeKey === "precaution" ? "selected" : ""}>Precaution (Safeguards)</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="question-prompt-label" for="question-${index}-scenarioTitle">SCENARIO TITLE</label>
       <input
         class="question-prompt-input"
-        id="question-${index}-prompt"
-        name="prompt"
+        id="question-${index}-scenarioTitle"
+        name="scenarioTitle"
         type="text"
-        maxlength="240"
-        value="${escapeHtml(question.prompt)}"
-        placeholder="e.g. Which planet is known as the Red Planet?"
+        maxlength="250"
+        value="${escapeHtml(question.scenarioTitle || "")}"
+        placeholder="e.g. The refund that went elsewhere"
         required
         ${disabled ? "disabled" : ""}
       />
+
+      <label class="question-prompt-label" for="question-${index}-scenarioText">SCENARIO CASE FACTS / NARRATIVE</label>
+      <textarea
+        class="question-prompt-input question-textarea"
+        id="question-${index}-scenarioText"
+        name="scenarioText"
+        rows="3"
+        maxlength="2000"
+        placeholder="Detailed scenario facts..."
+        required
+        ${disabled ? "disabled" : ""}
+      >${escapeHtml(question.scenarioText || "")}</textarea>
+
+      <label class="question-prompt-label" for="question-${index}-scenarioSource">SCENARIO SOURCE / CITATION</label>
+      <input
+        class="question-prompt-input"
+        id="question-${index}-scenarioSource"
+        name="scenarioSource"
+        type="text"
+        maxlength="250"
+        value="${escapeHtml(question.scenarioSource || "")}"
+        placeholder="e.g. The Tribune, 14 July 2026 (Panchkula Cyber Crime Police)"
+        ${disabled ? "disabled" : ""}
+      />
+
+      <label class="question-prompt-label" for="question-${index}-prompt">QUESTION PROMPT</label>
+      <textarea
+        class="question-prompt-input question-textarea"
+        id="question-${index}-prompt"
+        name="prompt"
+        rows="2"
+        maxlength="2000"
+        placeholder="Question prompt..."
+        required
+        ${disabled ? "disabled" : ""}
+      >${escapeHtml(question.prompt)}</textarea>
+
       <div class="question-option-grid">${options}</div>
+
       <fieldset class="correct-options">
         <legend>SELECT THE CORRECT ANSWER</legend>
         ${correctOptions}
       </fieldset>
+
+      <label class="question-prompt-label" for="question-${index}-explanation">ANALYSIS & EXPLANATION</label>
+      <textarea
+        class="question-prompt-input question-textarea"
+        id="question-${index}-explanation"
+        name="explanation"
+        rows="2"
+        maxlength="1000"
+        placeholder="Why this option is correct..."
+        ${disabled ? "disabled" : ""}
+      >${escapeHtml(question.explanation || "")}</textarea>
+
+      <label class="question-prompt-label" for="question-${index}-slides">SLIDE REFERENCES (COMMA-SEPARATED)</label>
+      <input
+        class="question-prompt-input"
+        id="question-${index}-slides"
+        name="slides"
+        type="text"
+        maxlength="100"
+        value="${escapeHtml(Array.isArray(question.slides) ? question.slides.join(", ") : "")}"
+        placeholder="e.g. 3, 6, 30"
+        ${disabled ? "disabled" : ""}
+      />
+
       <div class="question-editor-buttons">
         <button class="button button-primary question-save-button" type="submit" ${disabled ? "disabled" : ""}>
           ${isNew ? "Add question" : "Save changes"}
@@ -328,6 +423,8 @@ function renderDashboard(state) {
           </article>`;
       }
 
+      const scenarioNum = question.scenarioId || (Math.floor(index / 4) + 1);
+      const typeKey = (question.type || "apply").toLowerCase();
       const optionsPreview = question.options
         .map(
           (opt, i) => `
@@ -343,8 +440,15 @@ function renderDashboard(state) {
         <article class="question-editor-card" data-card-index="${index}">
           <div class="question-editor-card-heading">
             <div class="question-heading-left">
-              <span class="question-card-number">#${String(index + 1).padStart(2, "0")}</span>
+              <div class="admin-q-tags">
+                <span class="question-card-number">#${String(index + 1).padStart(2, "0")}</span>
+                <span class="admin-scenario-pill">Scenario ${scenarioNum}</span>
+                <span class="admin-type-pill admin-type-${typeKey}">${escapeHtml(question.typeLabel || typeKey.toUpperCase())}</span>
+              </div>
               <h4 class="question-preview-title">${escapeHtml(question.prompt)}</h4>
+              <div class="admin-scenario-context">
+                <strong>Case:</strong> ${escapeHtml(question.scenarioTitle || `Scenario ${scenarioNum}`)}
+              </div>
             </div>
             <div class="question-card-actions">
               <button
@@ -366,6 +470,12 @@ function renderDashboard(state) {
             </div>
           </div>
           <div class="question-options-preview-grid">${optionsPreview}</div>
+          ${question.explanation ? `
+            <div class="admin-exp-preview">
+              <span class="admin-exp-icon">💡</span>
+              <span class="admin-exp-text"><strong>Analysis:</strong> ${escapeHtml(question.explanation)}</span>
+              ${Array.isArray(question.slides) && question.slides.length ? `<span class="admin-slides-tag">Slides: ${question.slides.join(", ")}</span>` : ""}
+            </div>` : ""}
         </article>`;
     })
     .join("");
@@ -499,7 +609,7 @@ function renderDashboard(state) {
               <div class="panel-heading">
                 <div>
                   <div class="eyebrow">QUIZ CONTENT</div>
-                  <h2>Question Bank (${state.questions.length} / 50)</h2>
+                  <h2>Question Bank (${state.questions.length} / 100)</h2>
                 </div>
                 <span class="status-pill ${questionsEnabled ? "is-active" : "is-locked"}">
                   ${questionsEnabled ? "Editable (Lobby)" : "Locked (Quiz Active)"}
@@ -508,19 +618,19 @@ function renderDashboard(state) {
               <p class="question-manager-note">
                 ${
                   questionsEnabled
-                    ? "Add or edit questions before the quiz starts. Each question includes four multiple-choice options."
+                    ? "Add or edit scenario-based questions before the quiz starts. Each question includes four multiple-choice options, scenario facts, legal rationale, and slide references."
                     : "Question editing is locked while a quiz is live or completed. Reset the quiz to edit questions."
                 }
               </p>
 
               ${
-                questionsEnabled && state.questions.length < 50
+                questionsEnabled && state.questions.length < 100
                   ? `<div class="admin-add-question-section">
                       <div class="admin-subheading">
                         <h3>+ Add New Question</h3>
                       </div>
                       <div class="question-editor-card question-add-card">
-                        ${questionEditorForm({ prompt: "", options: ["", "", "", ""], correct: 0 }, "new")}
+                        ${questionEditorForm({ scenarioId: 1, scenarioTitle: "", scenarioText: "", scenarioSource: "", type: "apply", prompt: "", options: ["", "", "", ""], correct: 0, explanation: "", slides: [] }, "new")}
                       </div>
                     </div>`
                   : ""
@@ -693,10 +803,29 @@ function setupDashboardEvents(state) {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
       const index = event.currentTarget.dataset.index;
+      const type = String(formData.get("type") || "apply").trim();
+      const typeLabelsMap = {
+        apply: "Apply",
+        law: "Law",
+        evidence: "Evidence",
+        precaution: "Precaution",
+      };
+
       const question = {
+        scenarioId: Number(formData.get("scenarioId")) || (index !== "new" ? Math.floor(Number(index) / 4) + 1 : 1),
+        scenarioTitle: String(formData.get("scenarioTitle") || "").trim(),
+        scenarioText: String(formData.get("scenarioText") || "").trim(),
+        scenarioSource: String(formData.get("scenarioSource") || "").trim(),
+        type,
+        typeLabel: typeLabelsMap[type] || (type.charAt(0).toUpperCase() + type.slice(1)),
         prompt: String(formData.get("prompt") || "").trim(),
         options: [0, 1, 2, 3].map((i) => String(formData.get(`option${i}`) || "").trim()),
         correct: Number(formData.get("correct")),
+        explanation: String(formData.get("explanation") || "").trim(),
+        slides: String(formData.get("slides") || "")
+          .split(",")
+          .map((s) => Number(s.trim()))
+          .filter(Number.isInteger),
       };
 
       try {

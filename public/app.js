@@ -206,7 +206,7 @@ function renderDashboard(state) {
         </a>
         <div class="topbar-center">
           <div class="event-tag"><span class="status-dot ${state.phase === "live" ? "is-live" : ""}"></span>${phaseLabel(state.phase)}</div>
-          <span class="quiz-length"><span class="length-dot"></span>${state.questions.length} questions</span>
+          <span class="quiz-length"><span class="length-dot"></span>6 Scenarios · ${state.questions.length} Questions</span>
         </div>
         <div class="topbar-actions">
           <button class="topbar-link-button" type="button" id="share-link">Copy join link <span>↗</span></button>
@@ -282,9 +282,9 @@ function renderDashboard(state) {
           <!-- 75% Screen: BIG QR CODE -->
           <article class="panel stage-qr-panel">
             <div class="stage-qr-header">
-              <div class="stage-qr-eyebrow"><span class="eyebrow-line"></span> SCAN WITH YOUR PHONE CAMERA TO PLAY</div>
-              <h2 class="stage-qr-title">Scan To Join The Quiz</h2>
-              <p class="stage-qr-subtitle">Point your mobile camera at the QR code below. No app installation needed.</p>
+              <div class="stage-qr-eyebrow"><span class="eyebrow-line"></span> PRESENTATION 3 · CYBER FRAUD & THE MONEY TRAIL</div>
+              <h2 class="stage-qr-title">Scan To Join The Scenario Quiz</h2>
+              <p class="stage-qr-subtitle">Law as on October 2026 · Reader v6 (56 slides) · 6 Real-World Cases · 24 High-Stakes Questions</p>
             </div>
 
             <div class="stage-qr-center">
@@ -612,22 +612,81 @@ function renderParticipant(state, force = false) {
     return;
   }
   const progress = Math.round((questionIndex / state.questions.length) * 100);
+  const scenarioNum = question.scenarioId || (Math.floor(questionIndex / 4) + 1);
+  const qInScenario = (questionIndex % 4) + 1;
+  const typeKey = (question.type || "apply").toLowerCase();
+  const typeIcons = {
+    apply: "🎯",
+    law: "⚖️",
+    evidence: "🔍",
+    precaution: "🛡️",
+  };
+  const typeLabels = {
+    apply: "APPLY · Practical Application",
+    law: "LAW · Statutory Provisions & Offences",
+    evidence: "EVIDENCE · Digital Trail & Proof",
+    precaution: "PRECAUTION · Safeguards & Red Flags",
+  };
+  const typeIcon = typeIcons[typeKey] || "📋";
+  const typeBadgeText = typeLabels[typeKey] || (question.typeLabel || typeKey.toUpperCase());
+
   app.innerHTML = `
-    <main class="participant-shell playing-shell question-enter">
-      ${participantHeader(`QUESTION ${String(questionIndex + 1).padStart(2, "0")} / ${String(state.questions.length).padStart(2, "0")}`, "")}
+    <main class="participant-shell playing-shell scenario-mode question-enter">
+      ${participantHeader(`Q ${String(questionIndex + 1).padStart(2, "0")} / ${String(state.questions.length).padStart(2, "0")}`, "")}
       <div class="quiz-progress"><span style="width:${progress}%"></span></div>
-      <div class="question-meta"><span>QUESTION ${questionIndex + 1}</span><span>${state.questions.length - questionIndex} TO GO</span></div>
-      <h1 class="question-title">${escapeHtml(question.prompt)}</h1>
-      <div class="answer-options">
-        ${question.options
-      .map(
-        (option, optionIndex) => `
-              <button class="answer-option" type="button" data-option="${optionIndex}" aria-label="Answer ${letters[optionIndex]}: ${escapeHtml(option)}">
-                <span class="option-letter">${letters[optionIndex]}</span><span>${escapeHtml(option)}</span><span class="option-arrow">↗</span>
-              </button>`,
-      )
-      .join("")}
+
+      <div class="scenario-tracker-bar">
+        <div class="tracker-left">
+          <span class="scenario-pill">SCENARIO ${scenarioNum} OF 6</span>
+          <span class="sub-q-pill">Question ${qInScenario} of 4</span>
+        </div>
+        <div class="tracker-right">
+          <span class="type-pill type-pill-${typeKey}">${typeIcon} ${escapeHtml(typeBadgeText)}</span>
+        </div>
       </div>
+
+      <!-- SCENARIO CASE BRIEFING DOSSIER -->
+      <section class="scenario-dossier-card" aria-label="Scenario briefing facts">
+        <div class="scenario-dossier-top">
+          <div class="scenario-dossier-title-wrap">
+            <span class="scenario-dossier-icon">📁</span>
+            <div>
+              <div class="scenario-dossier-eyebrow">CASE BRIEFING #${scenarioNum}</div>
+              <h2 class="scenario-dossier-title">${escapeHtml(question.scenarioTitle || `Scenario ${scenarioNum}`)}</h2>
+            </div>
+          </div>
+        </div>
+        <div class="scenario-dossier-body">
+          <p class="scenario-dossier-text">${escapeHtml(question.scenarioText)}</p>
+        </div>
+        ${question.scenarioSource ? `
+          <div class="scenario-dossier-source">
+            <span class="source-pin">📌</span>
+            <span>Source: <strong>${escapeHtml(question.scenarioSource)}</strong></span>
+          </div>` : ""}
+      </section>
+
+      <!-- QUESTION PROMPT & OPTIONS -->
+      <section class="question-action-card">
+        <div class="question-action-header">
+          <div class="question-action-eyebrow">QUESTION ${questionIndex + 1} OF ${state.questions.length}</div>
+          <h1 class="scenario-question-title">${escapeHtml(question.prompt)}</h1>
+        </div>
+
+        <div class="answer-options scenario-options">
+          ${question.options
+            .map(
+              (option, optionIndex) => `
+                <button class="answer-option scenario-option" type="button" data-option="${optionIndex}" aria-label="Answer ${letters[optionIndex]}: ${escapeHtml(option)}">
+                  <span class="option-letter">${letters[optionIndex]}</span>
+                  <span class="option-text">${escapeHtml(option)}</span>
+                  <span class="option-arrow">↗</span>
+                </button>`,
+            )
+            .join("")}
+        </div>
+      </section>
+
       <div class="participant-note"><span>✳</span> Playing as <strong>${escapeHtml(participantName)}</strong></div>
     </main>`;
 
@@ -663,7 +722,7 @@ async function submitAnswer(questionIndex, optionIndex) {
     }
   });
 
-  const totalQuestions = latestState?.questions?.length || 5;
+  const totalQuestions = latestState?.questions?.length || 24;
   const isLastQuestion = questionIndex >= totalQuestions - 1;
   const nextQuestionNum = questionIndex + 2;
 
@@ -706,31 +765,110 @@ function renderParticipantResult(state) {
   const person = state.participant;
   const totalAnswered = person.answers.filter((answer) => answer !== null).length;
   const score = person.score;
+  const rank = state.leaderboard.find((player) => player.id === participantId)?.rank;
+  const pct = Math.round((score / state.questions.length) * 100);
+
+  let performanceTitle = "Investigative Trainee";
+  let performanceDesc = "Review cyber crime statutory provisions and audit trail records.";
+  if (score >= 21) {
+    performanceTitle = "Cyber Fraud Master Investigator 🏆";
+    performanceDesc = "Exceptional mastery of cyber crime law, money trails, and audit evidence!";
+  } else if (score >= 17) {
+    performanceTitle = "Senior Fraud Analyst ⭐";
+    performanceDesc = "Strong command of money trail analysis, mule networks, and departmental safeguards.";
+  } else if (score >= 12) {
+    performanceTitle = "Competent Legal & Tax Analyst 🛡️";
+    performanceDesc = "Good understanding of core principles, with room to refine evidence nuances.";
+  }
+
   const review = state.questions
     .map((question, index) => {
       const answer = person.answers[index];
       const correct = person.correctOptionIndexes?.[index];
       const isCorrect = answer !== null && answer === correct;
+      const scenarioNum = question.scenarioId || (Math.floor(index / 4) + 1);
+      const qInScenario = (index % 4) + 1;
+      const typeKey = (question.type || "apply").toLowerCase();
+      const hasExplanation = Boolean(question.explanation);
+      const hasSlides = Array.isArray(question.slides) && question.slides.length > 0;
+
       return `
-        <div class="review-row">
-          <span class="review-mark ${isCorrect ? "review-correct" : "review-wrong"}">${isCorrect ? "✓" : "×"}</span>
-          <span class="review-question">${escapeHtml(question.prompt)}<small>${answer === null ? "Not answered" : `Your answer: ${escapeHtml(question.options[answer])}`}${!isCorrect && correct !== undefined ? ` · Correct: ${escapeHtml(question.options[correct])}` : ""}</small></span>
-          <span class="review-points">${isCorrect ? "+1" : "0"}</span>
-        </div>`;
+        <article class="review-scenario-card ${isCorrect ? "is-review-correct" : "is-review-wrong"}">
+          <div class="review-card-top">
+            <div class="review-tags">
+              <span class="review-scenario-tag">Scenario ${scenarioNum} · Q${qInScenario}</span>
+              <span class="review-type-tag review-type-${typeKey}">${escapeHtml(question.typeLabel || typeKey.toUpperCase())}</span>
+              <span class="review-overall-tag">#${index + 1}</span>
+            </div>
+            <span class="review-points-badge ${isCorrect ? "points-correct" : "points-wrong"}">
+              ${isCorrect ? "✓ +1 POINT" : "× 0 POINTS"}
+            </span>
+          </div>
+
+          <div class="review-scenario-ref-bar">
+            <span>📁 ${escapeHtml(question.scenarioTitle || `Scenario ${scenarioNum}`)}</span>
+          </div>
+
+          <h4 class="review-prompt">${escapeHtml(question.prompt)}</h4>
+
+          <div class="review-answers-box">
+            <div class="review-ans-item ${isCorrect ? "is-user-correct" : "is-user-wrong"}">
+              <span class="review-ans-label">Your Answer:</span>
+              <span class="review-ans-text">${answer === null ? "Not answered" : `<strong>[${letters[answer]}]</strong> ${escapeHtml(question.options[answer])}`}</span>
+            </div>
+            ${!isCorrect && correct !== undefined ? `
+              <div class="review-ans-item is-correct-answer">
+                <span class="review-ans-label">Correct Answer:</span>
+                <span class="review-ans-text"><strong>[${letters[correct]}]</strong> ${escapeHtml(question.options[correct])}</span>
+              </div>` : ""}
+          </div>
+
+          ${hasExplanation ? `
+            <div class="review-explanation-box">
+              <div class="review-exp-header">
+                <span class="review-exp-icon">💡</span>
+                <strong>Legal & Investigative Rationale:</strong>
+              </div>
+              <p class="review-exp-text">${escapeHtml(question.explanation)}</p>
+            </div>` : ""}
+
+          ${hasSlides ? `
+            <div class="review-slides-ref">
+              <span class="slides-icon">📖</span>
+              <span>Presentation Reader Reference: <strong>Slide ${question.slides.join(", Slide ")}</strong></span>
+            </div>` : ""}
+        </article>`;
     })
     .join("");
-  const rank = state.leaderboard.find((player) => player.id === participantId)?.rank;
+
   app.innerHTML = `
-    <main class="participant-shell result-shell">
-      ${participantHeader("THAT’S A WRAP", `Nice work,<br /><span>${escapeHtml(participantName)}.</span>`)}
+    <main class="participant-shell result-shell scenario-result-shell">
+      ${participantHeader("ASSESSMENT SUMMARY", `Results for<br /><span>${escapeHtml(participantName)}.</span>`)}
+      
       <section class="result-score-card">
-        <div class="score-spark">✳</div><span class="score-label">YOUR FINAL SCORE</span>
+        <div class="score-spark">✳</div>
+        <span class="score-label">FINAL SCORE</span>
         <div class="score-value">${score}<span>/${state.questions.length}</span></div>
-        <p>${totalAnswered === state.questions.length ? "Every answer is in. How’d you do?" : `You answered ${totalAnswered} of ${state.questions.length} questions.`}</p>
-        ${state.phase === "ended" && rank ? `<div class="rank-ribbon">YOU PLACED <strong>#${rank}</strong></div>` : ""}
+        <div class="score-pct-badge">${pct}% Accuracy</div>
+        <div class="performance-title">${performanceTitle}</div>
+        <p class="performance-desc">${performanceDesc}</p>
+        <p class="answered-summary">${totalAnswered === state.questions.length ? "All 24 scenario questions completed." : `Answered ${totalAnswered} of ${state.questions.length} questions.`}</p>
+        ${state.phase === "ended" && rank ? `<div class="rank-ribbon">YOU PLACED <strong>#${rank} ON THE BOARD</strong></div>` : ""}
       </section>
-      <section class="answer-review"><div class="review-heading"><span>YOUR ANSWERS</span><span>${score} CORRECT</span></div>${review}</section>
-      <p class="result-wait">${state.phase === "ended" ? "Final leaderboard is on the big screen." : "Waiting for the host to reveal final results."}</p>
+
+      <section class="answer-review">
+        <div class="review-heading">
+          <div>
+            <span>QUESTION BY QUESTION ANALYSIS</span>
+            <h2>Detailed Review (${score}/${state.questions.length} Correct)</h2>
+          </div>
+          <span class="review-score-pill">${pct}%</span>
+        </div>
+        <div class="review-cards-list">${review}</div>
+      </section>
+
+      <p class="result-wait">${state.phase === "ended" ? "Final leaderboard is on the presenter screen." : "Waiting for the presenter to wrap up the round."}</p>
+      <div class="participant-note"><span>✳</span> Played as <strong>${escapeHtml(participantName)}</strong></div>
     </main>`;
 }
 

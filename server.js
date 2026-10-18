@@ -24,34 +24,15 @@ if (process.env.VERCEL && (!redisUrl || !process.env.QUIZ_ADMIN_PASSWORD)) {
 const redis = redisUrl ? new Redis({ url: redisUrl, token: redisToken }) : null;
 const REDIS_STATE_KEY = "realtime-quiz:state";
 const REDIS_LOCK_KEY = "realtime-quiz:state-lock";
-const defaultQuestions = [
-  {
-    prompt: "Which planet is known as the Red Planet?",
-    options: ["Venus", "Mars", "Jupiter", "Mercury"],
-    correct: 1,
-  },
-  {
-    prompt: "What is the largest ocean on Earth?",
-    options: ["Atlantic", "Indian", "Arctic", "Pacific"],
-    correct: 3,
-  },
-  {
-    prompt: "How many sides does a hexagon have?",
-    options: ["Five", "Six", "Seven", "Eight"],
-    correct: 1,
-  },
-  {
-    prompt: "Which gas do plants absorb from the atmosphere?",
-    options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
-    correct: 2,
-  },
-  {
-    prompt: "What is the fastest land animal?",
-    options: ["Lion", "Cheetah", "Pronghorn", "Horse"],
-    correct: 1,
-  },
-];
-const MAX_QUESTIONS = 50;
+let defaultQuestions = [];
+try {
+  const savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+  if (Array.isArray(savedConfig.questions) && savedConfig.questions.length > 0) {
+    defaultQuestions = savedConfig.questions;
+  }
+} catch {}
+
+const MAX_QUESTIONS = 100;
 const OPTION_COUNT = 4;
 
 function normalizeQuestions(value) {
@@ -66,19 +47,40 @@ function normalizeQuestions(value) {
     const options = Array.isArray(question.options)
       ? question.options.map((option) => (typeof option === "string" ? option.trim() : ""))
       : [];
-    if (!prompt || prompt.length > 240) {
-      throw new Error(`Question ${index + 1} must have a prompt of 1 to 240 characters.`);
+    if (!prompt || prompt.length > 2000) {
+      throw new Error(`Question ${index + 1} must have a prompt of 1 to 2000 characters.`);
     }
     if (
       options.length !== OPTION_COUNT ||
-      options.some((option) => !option || option.length > 100)
+      options.some((option) => !option || option.length > 500)
     ) {
-      throw new Error(`Question ${index + 1} must have four answers of 1 to 100 characters each.`);
+      throw new Error(`Question ${index + 1} must have four answers of 1 to 500 characters each.`);
     }
     if (!Number.isInteger(question.correct) || question.correct < 0 || question.correct >= OPTION_COUNT) {
       throw new Error(`Question ${index + 1} must have one correct answer selected.`);
     }
-    return { prompt, options, correct: question.correct };
+    const scenarioId = Number.isInteger(question.scenarioId)
+      ? question.scenarioId
+      : Math.floor(index / 4) + 1;
+    const type = typeof question.type === "string" ? question.type.trim() : "apply";
+    const typeLabel = typeof question.typeLabel === "string" && question.typeLabel.trim()
+      ? question.typeLabel.trim()
+      : (type.charAt(0).toUpperCase() + type.slice(1));
+
+    return {
+      id: question.id || index + 1,
+      scenarioId,
+      scenarioTitle: typeof question.scenarioTitle === "string" ? question.scenarioTitle.trim() : `Scenario ${scenarioId}`,
+      scenarioText: typeof question.scenarioText === "string" ? question.scenarioText.trim() : "",
+      scenarioSource: typeof question.scenarioSource === "string" ? question.scenarioSource.trim() : "",
+      type,
+      typeLabel,
+      prompt,
+      options,
+      correct: question.correct,
+      explanation: typeof question.explanation === "string" ? question.explanation.trim() : "",
+      slides: Array.isArray(question.slides) ? question.slides.filter(Number.isInteger) : []
+    };
   });
 }
 
@@ -260,27 +262,40 @@ function getState(participantId, isAdmin = false, request) {
       rank: index + 1,
     }));
 
+  const participant = participants.get(participantId);
+  const isParticipantCompleted = Boolean(participant && participant.completedAt !== null);
+  const showReviewDetails = isAdmin || phase === "ended" || isParticipantCompleted;
+
   const state = {
     phase,
     startedAt,
     roundId,
     joinUrl: getJoinUrl(request),
     isAdmin,
-    questions: questions.map(({ prompt, options, correct }) => ({
-      prompt,
-      options,
-      ...(isAdmin ? { correct } : {}),
+    quizTitle: "Presentation 3 — Cyber Fraud & the Money Trail: Scenario Quiz",
+    quizSubtitle: "Law as on October 2026 · Reader v6 (56 slides) · 6 Scenarios · 24 Questions",
+    timeMinutes: 10,
+    questions: questions.map((q) => ({
+      id: q.id,
+      scenarioId: q.scenarioId,
+      scenarioTitle: q.scenarioTitle,
+      scenarioText: q.scenarioText,
+      scenarioSource: q.scenarioSource,
+      type: q.type,
+      typeLabel: q.typeLabel,
+      prompt: q.prompt,
+      options: q.options,
+      ...(showReviewDetails ? { correct: q.correct, explanation: q.explanation, slides: q.slides } : {}),
     })),
     participantCount: participants.size,
     submittedAnswers: [...participants.values()].reduce(
-      (total, participant) =>
-        total + participant.answers.filter((answer) => answer !== null).length,
+      (total, p) =>
+        total + p.answers.filter((answer) => answer !== null).length,
       0,
     ),
     completedCount: leaderboard.length,
     leaderboard,
   };
-  const participant = participants.get(participantId);
   if (participant) {
     state.participant = {
       answers: participant.answers,
@@ -356,7 +371,12 @@ function normalizeJoinUrl(value) {
 async function saveLocalConfig(joinUrl, questionList) {
   if (redis) return;
   const temporaryFile = `${CONFIG_FILE}.tmp`;
+  let baseConfig = {};
+  try {
+    baseConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+  } catch {}
   const config = {
+    ...baseConfig,
     ...(joinUrl ? { joinUrl } : {}),
     questions: questionList,
   };
@@ -479,7 +499,8 @@ async function handleApiRequest(request, response, url) {
       "Name",
       "Status",
       ...questions.map(
-        (question, index) => `Question ${index + 1}: ${question.prompt}`,
+        (question, index) =>
+          `Q${index + 1} [Scenario ${question.scenarioId} · ${question.typeLabel || question.type}]: ${question.prompt}`,
       ),
       "Score",
       "Total time",
