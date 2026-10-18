@@ -15,8 +15,17 @@ let participantRefreshing = false;
 let participantViewKey = null;
 let toastTimer;
 
+function getAdminToken() {
+  return localStorage.getItem(adminTokenKey) || sessionStorage.getItem(adminTokenKey) || "";
+}
+
+function removeAdminToken() {
+  localStorage.removeItem(adminTokenKey);
+  sessionStorage.removeItem(adminTokenKey);
+}
+
 async function request(path, options = {}) {
-  const token = sessionStorage.getItem(adminTokenKey);
+  const token = getAdminToken();
   const response = await fetch(path, {
     ...options,
     headers: {
@@ -27,20 +36,20 @@ async function request(path, options = {}) {
   });
   const data = await response.json();
   if (!response.ok) {
-    if (response.status === 401 && token) sessionStorage.removeItem(adminTokenKey);
+    if (response.status === 401 && token) removeAdminToken();
     throw new Error(data.error || "Something went wrong. Please try again.");
   }
   return data;
 }
 
 async function downloadScoresheet() {
-  const token = sessionStorage.getItem(adminTokenKey);
+  const token = getAdminToken();
   const response = await fetch("/api/results.csv", {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!response.ok) {
     const data = await response.json();
-    if (response.status === 401 && token) sessionStorage.removeItem(adminTokenKey);
+    if (response.status === 401 && token) removeAdminToken();
     throw new Error(data.error || "Could not download the scoresheet.");
   }
 
@@ -122,51 +131,9 @@ function phaseLabel(phase) {
   return phase === "live" ? "Live now" : phase === "ended" ? "Quiz complete" : "Waiting to start";
 }
 
-function questionEditorForm(question, index, disabled = false) {
-  const options = question.options
-    .map(
-      (option, optionIndex) => `
-        <label class="question-option-field" for="question-${index}-option-${optionIndex}">
-          <span>${letters[optionIndex]}</span>
-          <input id="question-${index}-option-${optionIndex}" name="option${optionIndex}" type="text" maxlength="100" value="${escapeHtml(option)}" placeholder="Answer ${letters[optionIndex]}" required ${disabled ? "disabled" : ""} />
-        </label>`,
-    )
-    .join("");
-  const correctOptions = question.options
-    .map(
-      (_, optionIndex) => `
-        <label class="correct-option">
-          <input type="radio" name="correct" value="${optionIndex}" ${question.correct === optionIndex ? "checked" : ""} required ${disabled ? "disabled" : ""} />
-          <span>${letters[optionIndex]} is correct</span>
-        </label>`,
-    )
-    .join("");
-  return `
-    <form class="question-editor-form" data-index="${index}">
-      <label class="question-prompt-label" for="question-${index}-prompt">QUESTION ${typeof index === "number" ? index + 1 : ""}</label>
-      <input class="question-prompt-input" id="question-${index}-prompt" name="prompt" type="text" maxlength="240" value="${escapeHtml(question.prompt)}" placeholder="Enter the question" required ${disabled ? "disabled" : ""} />
-      <div class="question-option-grid">${options}</div>
-      <fieldset class="correct-options"><legend>SELECT THE CORRECT ANSWER</legend>${correctOptions}</fieldset>
-      <button class="button button-primary question-save-button" type="submit" ${disabled ? "disabled" : ""}>${typeof index === "number" ? "Save changes" : "Add question"}</button>
-    </form>`;
-}
-
 function renderDashboard(state) {
   const joinUrl = state.joinUrl;
   const joinHref = escapeHtml(joinUrl);
-  const questionsEnabled = state.phase === "lobby";
-  const questionCards = state.questions
-    .map(
-      (question, index) => `
-        <article class="question-editor-card">
-          <div class="question-editor-card-heading">
-            <span class="question-card-number">${String(index + 1).padStart(2, "0")}</span>
-            <button class="text-button question-delete-button" type="button" data-index="${index}" ${!questionsEnabled || state.questions.length === 1 ? "disabled" : ""}>Delete</button>
-          </div>
-          ${questionEditorForm(question, index, !questionsEnabled)}
-        </article>`,
-    )
-    .join("");
   const leaderboard = state.leaderboard.length
     ? state.leaderboard
         .slice(0, 8)
@@ -189,118 +156,137 @@ function renderDashboard(state) {
           <span class="brand-mark">q<span>.</span></span>
           <span>quiz<span class="brand-light">night</span></span>
         </a>
-        <div class="event-tag"><span class="status-dot ${state.phase === "live" ? "is-live" : ""}"></span>${phaseLabel(state.phase)}</div>
+        <div class="topbar-center">
+          <div class="event-tag"><span class="status-dot ${state.phase === "live" ? "is-live" : ""}"></span>${phaseLabel(state.phase)}</div>
+          <span class="quiz-length"><span class="length-dot"></span>${state.questions.length} questions</span>
+        </div>
         <div class="topbar-actions">
           <button class="topbar-link-button" type="button" id="share-link">Copy join link <span>↗</span></button>
-          <button class="admin-toggle" type="button" id="admin-toggle">${state.isAdmin ? "Admin tools" : "Admin"}</button>
+          <a class="topbar-link-button admin-portal-btn" href="/admin" id="admin-link">Admin <span>⚙</span></a>
         </div>
       </header>
 
-      <main class="dashboard-main">
-        <section class="intro">
-          <div class="eyebrow"><span class="eyebrow-line"></span> THE ROOM IS YOURS</div>
-          <h1>Let’s get<br /><span>quizzical.</span></h1>
-          <p class="intro-copy">One room. ${state.questions.length} questions. Bragging rights<br class="desktop-break" /> for the winner.</p>
-          <div class="control-row">
-            ${
-              state.isAdmin
-                ? `<div class="quiz-controls">
-                    <button class="button button-primary" id="start-quiz" ${state.phase !== "lobby" ? "disabled" : ""}><span>Start quiz</span><span class="button-arrow">↗</span></button>
-                    <button class="button button-end" id="end-quiz" ${state.phase !== "live" ? "disabled" : ""}><span>Wrap quiz</span><span class="button-arrow">■</span></button>
-                    <button class="button button-reset" id="reset-quiz"><span>Reset quiz</span><span class="button-arrow">↻</span></button>
-                  </div>`
-                : `<span class="host-only-note">Host controls are admin-only</span>`
-            }
-            <span class="quiz-length"><span class="length-dot"></span>${state.questions.length} questions</span>
+      <main class="dashboard-main stage-mode">
+        ${
+          state.isAdmin
+            ? `<div class="host-quick-bar">
+                <div class="host-quick-info">
+                  <span class="host-quick-badge">HOST MODE</span>
+                  <span class="host-quick-round">Round #${state.roundId} · Live presenter controls</span>
+                </div>
+                <div class="quiz-controls">
+                  <button class="button button-primary" id="start-quiz" ${state.phase !== "lobby" ? "disabled" : ""}><span>Start quiz</span><span class="button-arrow">↗</span></button>
+                  <button class="button button-end" id="end-quiz" ${state.phase !== "live" ? "disabled" : ""}><span>Wrap quiz</span><span class="button-arrow">■</span></button>
+                  <button class="button button-reset" id="reset-quiz"><span>Reset quiz</span><span class="button-arrow">↻</span></button>
+                  <a class="button button-secondary host-admin-btn" href="/admin"><span>Admin Console</span><span class="button-arrow">→</span></a>
+                </div>
+              </div>`
+            : ""
+        }
+
+        <!-- 1. LIVE STATS ON TOP -->
+        <section class="stage-stats-bar" aria-label="Live quiz telemetry">
+          <div class="stage-stat-item">
+            <div class="stage-stat-icon people-icon">♧</div>
+            <div class="stage-stat-content">
+              <div class="stage-stat-label">PLAYERS IN ROOM</div>
+              <div class="stage-stat-number" id="player-count">${state.participantCount}<small> players</small></div>
+            </div>
+          </div>
+
+          <div class="stage-stat-divider"></div>
+
+          <div class="stage-stat-item">
+            <div class="stage-stat-icon answer-icon">↗</div>
+            <div class="stage-stat-content">
+              <div class="stage-stat-label">ANSWERS SUBMITTED</div>
+              <div class="stage-stat-number" id="answer-count">${state.submittedAnswers}<small> answers</small></div>
+            </div>
+          </div>
+
+          <div class="stage-stat-divider"></div>
+
+          <div class="stage-stat-item">
+            <div class="stage-stat-icon finish-icon">✳</div>
+            <div class="stage-stat-content">
+              <div class="stage-stat-label">PLAYERS COMPLETED</div>
+              <div class="stage-stat-number" id="finished-count">${state.completedCount}<small> / ${state.participantCount}</small></div>
+            </div>
+          </div>
+
+          <div class="stage-stat-divider"></div>
+
+          <div class="stage-stat-item stage-stat-status">
+            <div class="stage-stat-content">
+              <div class="stage-stat-label">CURRENT PHASE</div>
+              <div class="stage-status-badge">
+                <span class="status-dot ${state.phase === "live" ? "is-live" : ""}"></span>
+                <span id="stage-phase-label">${phaseLabel(state.phase)}</span>
+              </div>
+            </div>
+            <div class="stage-pulse-note">
+              <span class="pulse-dot"></span> Live updates
+            </div>
           </div>
         </section>
 
-        <section class="dashboard-grid" aria-label="Live quiz dashboard">
-          <article class="panel join-panel">
-            <div class="panel-heading">
-              <div><div class="eyebrow">GET IN THE GAME</div><h2>Scan to join</h2></div>
-              <span class="qr-badge">QR CODE</span>
+        <!-- 2. MAIN STAGE: 75% BIG QR & 25% LEADERBOARD -->
+        <section class="stage-main-grid" aria-label="Live quiz screen">
+          <!-- 75% Screen: BIG QR CODE -->
+          <article class="panel stage-qr-panel">
+            <div class="stage-qr-header">
+              <div class="stage-qr-eyebrow"><span class="eyebrow-line"></span> SCAN WITH YOUR PHONE CAMERA TO PLAY</div>
+              <h2 class="stage-qr-title">Scan To Join The Quiz</h2>
+              <p class="stage-qr-subtitle">Point your mobile camera at the QR code below. No app installation needed.</p>
             </div>
-            <a class="qr-frame" href="${joinHref}" aria-label="Join this quiz">
-              <img src="/api/qr" alt="Scan to join the quiz" />
-            </a>
-            <p class="scan-hint">Point your camera here</p>
-            <div class="join-url"><span>${escapeHtml(joinUrl.replace(/^https?:\/\//, ""))}</span><button type="button" id="copy-link">COPY LINK</button></div>
+
+            <div class="stage-qr-center">
+              <a class="stage-qr-frame" href="${joinHref}" target="_blank" rel="noopener" aria-label="Scan or click to join the quiz">
+                <img src="/api/qr" alt="Scan to join the quiz" />
+              </a>
+              <div class="stage-qr-scan-badge">
+                <span class="scan-camera-icon">📷</span>
+                <span>POINT CAMERA TO SCAN</span>
+              </div>
+            </div>
+
+            <div class="stage-join-bar">
+              <div class="stage-join-info">
+                <span class="stage-join-label">OR VISIT URL:</span>
+                <span class="stage-join-url">${escapeHtml(joinUrl)}</span>
+              </div>
+              <button class="stage-copy-btn" type="button" id="copy-link">
+                <span>COPY LINK</span>
+                <span>📋</span>
+              </button>
+            </div>
+
+            <div class="stage-qr-steps">
+              <div class="stage-step"><span class="step-num">1</span> Open camera on phone</div>
+              <div class="stage-step-arrow">→</div>
+              <div class="stage-step"><span class="step-num">2</span> Tap link notification</div>
+              <div class="stage-step-arrow">→</div>
+              <div class="stage-step"><span class="step-num">3</span> Pick nickname & play</div>
+            </div>
           </article>
 
-          <article class="panel stats-panel">
+          <!-- 25% Screen: LEADERBOARD -->
+          <article class="panel stage-leaderboard-panel">
             <div class="panel-heading">
-              <div><div class="eyebrow">THE ROOM, RIGHT NOW</div><h2>Live stats</h2></div>
-              <span class="live-indicator"><i></i> LIVE</span>
-            </div>
-            <div class="stat-list">
-              <div class="stat-item">
-                <div class="stat-icon people-icon">♧</div>
-                <div class="stat-label">Players in the room<span>Ready to play</span></div>
-                <div class="stat-number" id="player-count">${state.participantCount}<small> players</small></div>
+              <div>
+                <div class="eyebrow">THE ONES TO BEAT</div>
+                <h2>Leaderboard</h2>
               </div>
-              <div class="stat-item">
-                <div class="stat-icon answer-icon">↗</div>
-                <div class="stat-label">Answers submitted<span>Across all questions</span></div>
-                <div class="stat-number" id="answer-count">${state.submittedAnswers}<small> answers</small></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-icon finish-icon">✳</div>
-                <div class="stat-label">Players finished<span>Quiz completed</span></div>
-                <div class="stat-number" id="finished-count">${state.completedCount}<small> / ${state.participantCount}</small></div>
-              </div>
-            </div>
-            <div class="stats-foot"><span class="pulse-dot"></span> Updates automatically every second</div>
-          </article>
-
-          <article class="panel leaderboard-panel">
-            <div class="panel-heading">
-              <div><div class="eyebrow">THE ONES TO BEAT</div><h2>Leaderboard</h2></div>
               <span class="trophy">♜</span>
             </div>
-            <div class="leader-list" id="leader-list">${leaderboard}</div>
-            <div class="leader-footer">${state.phase === "ended" ? "FINAL RESULTS" : "RANKED BY SCORE, THEN TIME"} <span>✦</span></div>
+            <div class="leader-list stage-leader-list" id="leader-list">${leaderboard}</div>
+            <div class="leader-footer">
+              ${state.phase === "ended" ? "FINAL RESULTS 🏆" : "RANKED BY SCORE & TIME"}
+              <span>✦</span>
+            </div>
           </article>
         </section>
-        <section class="admin-panel" id="admin-panel" ${state.isAdmin ? "" : "hidden"}>
-          ${
-            state.isAdmin
-              ? `<div class="admin-panel-heading"><div><div class="eyebrow">HOST SETTINGS</div><h2>Admin controls</h2></div><button class="text-button" type="button" id="admin-logout">Sign out</button></div>
-                 <form class="admin-url-form" id="admin-url-form">
-                   <label for="join-url-input">AUDIENCE JOIN URL</label>
-                   <div class="admin-url-row"><input id="join-url-input" name="joinUrl" type="url" value="${escapeHtml(joinUrl)}" required /><button class="button button-primary" type="submit">Save URL</button></div>
-                   <p>QR code and copied links update after saving. Include the full device-reachable address.</p>
-                   <div class="form-error" id="admin-error" role="alert"></div>
-                 </form>`
-              : `<div class="admin-panel-heading"><div><div class="eyebrow">HOST ACCESS</div><h2>Admin sign in</h2></div></div>
-                 <form class="admin-login-form" id="admin-login-form">
-                   <label for="admin-password">ADMIN PASSCODE</label>
-                   <div class="admin-url-row"><input id="admin-password" name="password" type="password" autocomplete="current-password" required /><button class="button button-primary" type="submit">Sign in</button></div>
-                   <div class="form-error" id="admin-error" role="alert"></div>
-                 </form>`
-          }
-          ${
-            state.isAdmin
-              ? `<section class="question-manager">
-                   <div class="question-manager-heading">
-                     <div><div class="eyebrow">QUIZ CONTENT</div><h3>Manage questions</h3></div>
-                     <span>${state.questions.length} / 50</span>
-                   </div>
-                   <p class="question-manager-note">${questionsEnabled ? "Add or edit questions before the quiz starts. Every question has four choices." : "Question editing is locked during and after a quiz. Reset the quiz to make changes."}</p>
-                   <div class="question-editor-list">${questionCards}</div>
-                   ${
-                     questionsEnabled && state.questions.length < 50
-                       ? `<article class="question-editor-card question-add-card">
-                            <div class="question-editor-card-heading"><span class="question-card-number">+</span><span>NEW QUESTION</span></div>
-                            ${questionEditorForm({ prompt: "", options: ["", "", "", ""], correct: 0 }, "new")}
-                          </article>`
-                       : ""
-                   }
-                   <div class="form-error" id="question-error" role="alert"></div>
-                 </section>`
-              : ""
-          }
-        </section>
+
         <footer class="dashboard-footer"><span>MADE FOR THE MOMENT.</span><span>QUIZ NIGHT <i>©</i> 2026</span></footer>
       </main>
     </div>`;
@@ -313,15 +299,14 @@ function renderDashboard(state) {
       showToast(error.message);
     }
   });
+
   document.querySelector("#end-quiz")?.addEventListener("click", async () => {
     const confirmed = await confirmAction(
       "Wrap up this quiz?",
       "Players will no longer be able to submit answers. Final scores will be shown on the leaderboard.",
       "Wrap quiz",
     );
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
     try {
       await request("/api/end", { method: "POST", body: "{}" });
       await refreshDashboard();
@@ -335,15 +320,14 @@ function renderDashboard(state) {
       showToast(error.message);
     }
   });
+
   document.querySelector("#reset-quiz")?.addEventListener("click", async () => {
     const confirmed = await confirmAction(
       "Reset this quiz?",
       "This clears all players, answers, and leaderboard results, then returns the quiz to the lobby.",
       "Reset quiz",
     );
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
     try {
       await request("/api/reset", { method: "POST", body: "{}" });
       await refreshDashboard();
@@ -352,107 +336,7 @@ function renderDashboard(state) {
       showToast(error.message);
     }
   });
-  document.querySelector("#admin-toggle")?.addEventListener("click", () => {
-    const panel = document.querySelector("#admin-panel");
-    panel.hidden = !panel.hidden;
-    if (!panel.hidden) {
-      (state.isAdmin
-        ? document.querySelector("#join-url-input")
-        : document.querySelector("#admin-password")
-      )?.focus();
-    }
-  });
-  document.querySelector("#admin-login-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const error = document.querySelector("#admin-error");
-    try {
-      const formData = new FormData(event.currentTarget);
-      const result = await request("/api/admin/login", {
-        method: "POST",
-        body: JSON.stringify({ password: formData.get("password") }),
-      });
-      sessionStorage.setItem(adminTokenKey, result.token);
-      await refreshDashboard();
-      document.querySelector("#admin-panel").hidden = false;
-    } catch (requestError) {
-      error.textContent = requestError.message;
-    }
-  });
-  document.querySelector("#admin-url-form")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const error = document.querySelector("#admin-error");
-    try {
-      const formData = new FormData(event.currentTarget);
-      await request("/api/admin/join-url", {
-        method: "POST",
-        body: JSON.stringify({ joinUrl: formData.get("joinUrl") }),
-      });
-      showToast("Audience URL and QR code updated.");
-      await refreshDashboard();
-      document.querySelector("#admin-panel").hidden = false;
-    } catch (requestError) {
-      error.textContent = requestError.message;
-    }
-  });
-  document.querySelectorAll(".question-editor-form").forEach((form) => {
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const formData = new FormData(event.currentTarget);
-      const index = event.currentTarget.dataset.index;
-      const question = {
-        prompt: formData.get("prompt"),
-        options: [0, 1, 2, 3].map((optionIndex) => formData.get(`option${optionIndex}`)),
-        correct: Number(formData.get("correct")),
-      };
-      try {
-        await request("/api/admin/questions", {
-          method: "POST",
-          body: JSON.stringify({
-            action: index === "new" ? "add" : "edit",
-            ...(index !== "new" ? { index: Number(index) } : {}),
-            question,
-          }),
-        });
-        await refreshDashboard();
-        document.querySelector("#admin-panel").hidden = false;
-        showToast(index === "new" ? "Question added." : "Question updated.");
-      } catch (error) {
-        document.querySelector("#question-error").textContent = error.message;
-      }
-    });
-  });
-  document.querySelectorAll(".question-delete-button").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const index = Number(button.dataset.index);
-      const confirmed = await confirmAction(
-        "Delete this question?",
-        "This removes the question and clears any waiting-room answers for this quiz.",
-        "Delete question",
-      );
-      if (!confirmed) return;
-      try {
-        await request("/api/admin/questions", {
-          method: "POST",
-          body: JSON.stringify({ action: "delete", index }),
-        });
-        await refreshDashboard();
-        document.querySelector("#admin-panel").hidden = false;
-        showToast("Question deleted.");
-      } catch (error) {
-        document.querySelector("#question-error").textContent = error.message;
-      }
-    });
-  });
-  document.querySelector("#admin-logout")?.addEventListener("click", async () => {
-    try {
-      await request("/api/admin/logout", { method: "POST", body: "{}" });
-    } catch (error) {
-      showToast(error.message);
-    } finally {
-      sessionStorage.removeItem(adminTokenKey);
-      await refreshDashboard();
-    }
-  });
+
   document.querySelector("#share-link")?.addEventListener("click", copyJoinLink);
   document.querySelector("#copy-link")?.addEventListener("click", copyJoinLink);
 }
@@ -461,13 +345,15 @@ function updateDashboardStats(state) {
   const playerCount = document.querySelector("#player-count");
   const answerCount = document.querySelector("#answer-count");
   const finishedCount = document.querySelector("#finished-count");
+  const phaseLabelEl = document.querySelector("#stage-phase-label");
   if (playerCount) playerCount.innerHTML = `${state.participantCount}<small> players</small>`;
   if (answerCount) answerCount.innerHTML = `${state.submittedAnswers}<small> answers</small>`;
   if (finishedCount) finishedCount.innerHTML = `${state.completedCount}<small> / ${state.participantCount}</small>`;
+  if (phaseLabelEl) phaseLabelEl.textContent = phaseLabel(state.phase);
   const list = document.querySelector("#leader-list");
   if (list && state.leaderboard.length) {
     list.innerHTML = state.leaderboard
-      .slice(0, 8)
+      .slice(0, 10)
       .map(
         (player) => `
           <div class="leader-row">

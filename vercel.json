@@ -1,7 +1,6 @@
 {
-  "functions": {
-    "server.js": {
-      "includeFiles": "public/**"
-    }
-  }
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" }
+  ]
 }

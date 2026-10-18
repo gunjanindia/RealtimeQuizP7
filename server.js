@@ -698,7 +698,10 @@ async function handleApi(request, response, url) {
 }
 
 function serveFile(request, response, pathname) {
-  const requestedPath = pathname === "/" ? "/index.html" : decodeURIComponent(pathname);
+  let requestedPath = pathname === "/" ? "/index.html" : decodeURIComponent(pathname);
+  if (requestedPath === "/admin" || requestedPath === "/admin/") {
+    requestedPath = "/admin.html";
+  }
   const filePath = path.resolve(PUBLIC_DIR, `.${requestedPath}`);
   if (!filePath.startsWith(`${PUBLIC_DIR}${path.sep}`)) {
     response.writeHead(403);
@@ -740,7 +743,10 @@ async function vercelHandler(request, response) {
       return;
     }
 
-    const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+    let requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+    if (requestedPath === "/admin" || requestedPath === "/admin/") {
+      requestedPath = "/admin.html";
+    }
     const filePath = path.resolve(PUBLIC_DIR, `.${requestedPath}`);
     if (!filePath.startsWith(`${PUBLIC_DIR}${path.sep}`)) {
       response.writeHead(403);
