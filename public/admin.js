@@ -49,22 +49,50 @@ function showToast(message) {
 
 async function request(path, options = {}) {
   const token = getAdminToken();
-  const response = await fetch(path, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    if (response.status === 401 && token) {
-      removeAdminToken();
+  const timeoutMs = options.timeout || 7000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let combinedSignal = controller.signal;
+  if (options.signal) {
+    if (options.signal.aborted) {
+      clearTimeout(timeoutId);
+      throw new DOMException("Aborted", "AbortError");
     }
-    throw new Error(data.error || "Something went wrong. Please try again.");
+    options.signal.addEventListener("abort", () => controller.abort(), { once: true });
   }
-  return data;
+
+  try {
+    const response = await fetch(path, {
+      ...options,
+      signal: combinedSignal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+    clearTimeout(timeoutId);
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Invalid response received from server. Please try again.");
+    }
+    if (!response.ok) {
+      if (response.status === 401 && token) {
+        removeAdminToken();
+      }
+      throw new Error(data.error || "Something went wrong. Please try again.");
+    }
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw error;
+  }
 }
 
 async function downloadScoresheet() {

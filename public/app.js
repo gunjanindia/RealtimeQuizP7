@@ -14,6 +14,26 @@ let participantBusy = false;
 let participantRefreshing = false;
 let participantViewKey = null;
 let toastTimer;
+let busyWatchdogTimer = null;
+let activePollController = null;
+
+function setBusyState(busy) {
+  participantBusy = busy;
+  if (busyWatchdogTimer) {
+    clearTimeout(busyWatchdogTimer);
+    busyWatchdogTimer = null;
+  }
+  if (busy) {
+    // 7s max watchdog: guarantees UI will NEVER stay stuck if anything hangs
+    busyWatchdogTimer = setTimeout(() => {
+      console.warn("Safety watchdog: resetting busy participant state");
+      participantBusy = false;
+      participantViewKey = null;
+      hideQuestionLoader();
+      enableAnswerButtons();
+    }, 7000);
+  }
+}
 
 function getAdminToken() {
   return localStorage.getItem(adminTokenKey) || sessionStorage.getItem(adminTokenKey) || "";
@@ -26,20 +46,48 @@ function removeAdminToken() {
 
 async function request(path, options = {}) {
   const token = getAdminToken();
-  const response = await fetch(path, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    if (response.status === 401 && token) removeAdminToken();
-    throw new Error(data.error || "Something went wrong. Please try again.");
+  const timeoutMs = options.timeout || 7000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let combinedSignal = controller.signal;
+  if (options.signal) {
+    if (options.signal.aborted) {
+      clearTimeout(timeoutId);
+      throw new DOMException("Aborted", "AbortError");
+    }
+    options.signal.addEventListener("abort", () => controller.abort(), { once: true });
   }
-  return data;
+
+  try {
+    const response = await fetch(path, {
+      ...options,
+      signal: combinedSignal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+    clearTimeout(timeoutId);
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Invalid response received from server. Please try again.");
+    }
+    if (!response.ok) {
+      if (response.status === 401 && token) removeAdminToken();
+      throw new Error(data.error || "Something went wrong. Please try again.");
+    }
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      throw new Error("Request timed out. Please check your connection and try again.");
+    }
+    throw error;
+  }
 }
 
 async function downloadScoresheet() {
@@ -428,7 +476,94 @@ function renderJoinForm(message = "") {
   });
 }
 
-function renderParticipant(state) {
+function showQuestionLoader({ isLastQuestion, nextQuestionNum, totalQuestions }) {
+  const playingShell = app.querySelector(".playing-shell");
+  if (!playingShell) return;
+
+  const answerOptionsEl = playingShell.querySelector(".answer-options");
+  if (answerOptionsEl) {
+    answerOptionsEl.style.display = "none";
+  }
+
+  let loader = playingShell.querySelector("#question-loader");
+  if (!loader) {
+    loader = document.createElement("div");
+    loader.id = "question-loader";
+    loader.className = "question-loader-card";
+    const note = playingShell.querySelector(".participant-note");
+    if (note) {
+      playingShell.insertBefore(loader, note);
+    } else {
+      playingShell.appendChild(loader);
+    }
+  }
+
+  const kickerText = isLastQuestion ? "FINAL QUESTION" : "ANSWER RECORDED";
+  const headlineText = isLastQuestion
+    ? "Calculating your results…"
+    : `Loading Question ${nextQuestionNum} of ${totalQuestions}…`;
+  const glyph = isLastQuestion ? "★" : "⚡";
+
+  loader.innerHTML = `
+    <div class="loader-pulse-orbit">
+      <div class="loader-spinner-ring"></div>
+      <div class="loader-pulse-glyph">${glyph}</div>
+    </div>
+    <div class="loader-kicker">
+      <span class="loader-kicker-dot"></span>
+      <span>${kickerText}</span>
+    </div>
+    <div class="loader-headline">${headlineText}</div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar-fill"></div>
+    </div>
+  `;
+  loader.style.display = "flex";
+}
+
+function hideQuestionLoader() {
+  const playingShell = app.querySelector(".playing-shell");
+  if (!playingShell) return;
+  const loader = playingShell.querySelector("#question-loader");
+  if (loader) {
+    loader.remove();
+  }
+  const answerOptionsEl = playingShell.querySelector(".answer-options");
+  if (answerOptionsEl) {
+    answerOptionsEl.style.display = "";
+  }
+}
+
+function enableAnswerButtons() {
+  const buttons = app.querySelectorAll(".answer-option");
+  buttons.forEach((btn) => {
+    btn.disabled = false;
+    btn.classList.remove("selected");
+    btn.removeAttribute("aria-busy");
+    const arrow = btn.querySelector(".option-arrow");
+    if (arrow) arrow.textContent = "↗";
+  });
+}
+
+async function submitAnswerWithRetry(questionIndex, optionIndex, maxRetries = 1) {
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    try {
+      return await request("/api/answer", {
+        method: "POST",
+        body: JSON.stringify({ id: participantId, questionIndex, optionIndex }),
+        timeout: 5000,
+      });
+    } catch (err) {
+      attempt++;
+      if (attempt > maxRetries) throw err;
+      // Brief 150ms delay before single quick retry if server was busy or network blip
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  }
+}
+
+function renderParticipant(state, force = false) {
   latestState = state;
   if (!participantId || !state.participant) {
     renderJoinForm();
@@ -443,12 +578,23 @@ function renderParticipant(state) {
     person.score,
     rank,
   ]);
-  if (viewKey === participantViewKey) return;
+
+  if (!force && viewKey === participantViewKey) {
+    const stuckDisabled = app.querySelector(".answer-option:disabled");
+    if (!stuckDisabled && !participantBusy) return;
+  }
   participantViewKey = viewKey;
-  if (person.completed || state.phase === "ended") {
+
+  const allAnswered =
+    Array.isArray(person.answers) &&
+    person.answers.length > 0 &&
+    person.answers.every((ans) => ans !== null);
+
+  if (person.completed || state.phase === "ended" || allAnswered) {
     renderParticipantResult(state);
     return;
   }
+
   if (state.phase === "lobby") {
     app.innerHTML = `
       <main class="participant-shell waiting-shell">
@@ -462,9 +608,13 @@ function renderParticipant(state) {
   const index = person.answers.findIndex((answer) => answer === null);
   const questionIndex = index === -1 ? state.questions.length - 1 : index;
   const question = state.questions[questionIndex];
+  if (!question) {
+    renderParticipantResult(state);
+    return;
+  }
   const progress = Math.round((questionIndex / state.questions.length) * 100);
   app.innerHTML = `
-    <main class="participant-shell playing-shell">
+    <main class="participant-shell playing-shell question-enter">
       ${participantHeader(`QUESTION ${String(questionIndex + 1).padStart(2, "0")} / ${String(state.questions.length).padStart(2, "0")}`, "")}
       <div class="quiz-progress"><span style="width:${progress}%"></span></div>
       <div class="question-meta"><span>QUESTION ${questionIndex + 1}</span><span>${state.questions.length - questionIndex} TO GO</span></div>
@@ -473,7 +623,7 @@ function renderParticipant(state) {
         ${question.options
           .map(
             (option, optionIndex) => `
-              <button class="answer-option" type="button" data-option="${optionIndex}" ${participantBusy ? "disabled" : ""} aria-label="Answer ${letters[optionIndex]}: ${escapeHtml(option)}">
+              <button class="answer-option" type="button" data-option="${optionIndex}" aria-label="Answer ${letters[optionIndex]}: ${escapeHtml(option)}">
                 <span class="option-letter">${letters[optionIndex]}</span><span>${escapeHtml(option)}</span><span class="option-arrow">↗</span>
               </button>`,
           )
@@ -481,40 +631,75 @@ function renderParticipant(state) {
       </div>
       <div class="participant-note"><span>✳</span> Playing as <strong>${escapeHtml(participantName)}</strong></div>
     </main>`;
+
   app.querySelectorAll(".answer-option").forEach((button) => {
-    button.addEventListener("click", () => submitAnswer(questionIndex, Number(button.dataset.option)));
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      const optionIndex = Number(button.dataset.option);
+      if (Number.isInteger(optionIndex)) {
+        submitAnswer(questionIndex, optionIndex);
+      }
+    });
   });
 }
 
 async function submitAnswer(questionIndex, optionIndex) {
   if (participantBusy) return;
-  participantBusy = true;
-  const selectedButton = app.querySelector(`.answer-option[data-option="${optionIndex}"]`);
-  app.querySelectorAll(".answer-option").forEach((button) => {
-    button.disabled = true;
-    if (Number(button.dataset.option) === optionIndex) button.classList.add("selected");
-  });
-  if (selectedButton) {
-    selectedButton.setAttribute("aria-busy", "true");
-    selectedButton.querySelector(".option-arrow").textContent = "…";
+  setBusyState(true);
+
+  // Abort any active background poll immediately to prevent state collisions
+  if (activePollController) {
+    try {
+      activePollController.abort();
+    } catch {}
+    activePollController = null;
   }
+
+  const buttons = app.querySelectorAll(".answer-option");
+  buttons.forEach((button) => {
+    button.disabled = true;
+    if (Number(button.dataset.option) === optionIndex) {
+      button.classList.add("selected");
+      button.setAttribute("aria-busy", "true");
+    }
+  });
+
+  const totalQuestions = latestState?.questions?.length || 5;
+  const isLastQuestion = questionIndex >= totalQuestions - 1;
+  const nextQuestionNum = questionIndex + 2;
+
+  // Show the fast loader between questions
+  showQuestionLoader({ isLastQuestion, nextQuestionNum, totalQuestions });
+
+  // Fast minimum transition time (380ms) for snappy, smooth feel
+  const minTimer = new Promise((resolve) => setTimeout(resolve, 380));
+
   try {
-    const result = await request("/api/answer", {
-      method: "POST",
-      body: JSON.stringify({ id: participantId, questionIndex, optionIndex }),
-    });
-    participantBusy = false;
-    if (result.state.roundId !== participantRoundId) {
-      await refreshParticipant();
+    const result = await submitAnswerWithRetry(questionIndex, optionIndex);
+    await minTimer;
+
+    // Keep participantRoundId in sync
+    if (result.state?.roundId) {
+      participantRoundId = result.state.roundId;
+      localStorage.setItem("realtime-quiz-round-id", String(participantRoundId));
+    }
+
+    setBusyState(false);
+    renderParticipant(result.state, true);
+  } catch (error) {
+    console.error("Answer submission failed:", error);
+    setBusyState(false);
+    hideQuestionLoader();
+    enableAnswerButtons();
+    participantViewKey = null;
+
+    if (error.message && error.message.includes("Join the quiz")) {
+      showToast("Reconnecting to the quiz...");
+      await refreshParticipant(true);
       return;
     }
-    renderParticipant(result.state);
-  } catch (error) {
-    participantBusy = false;
-    showToast(error.message);
-    await refreshParticipant();
-  } finally {
-    participantBusy = false;
+
+    showToast(error.message || "Failed to submit answer. Please try again.");
   }
 }
 
@@ -550,9 +735,19 @@ function renderParticipantResult(state) {
     </main>`;
 }
 
-async function refreshParticipant() {
+async function refreshParticipant(force = false) {
   if (participantRefreshing) return;
+  if (participantBusy && !force) return;
   participantRefreshing = true;
+
+  if (activePollController) {
+    try {
+      activePollController.abort();
+    } catch {}
+  }
+  activePollController = new AbortController();
+  const currentController = activePollController;
+
   try {
     const id = localStorage.getItem("realtime-quiz-participant");
     if (!id) {
@@ -561,7 +756,12 @@ async function refreshParticipant() {
     }
     participantId = id;
     participantName = localStorage.getItem("realtime-quiz-name") || participantName;
-    const state = await request(`/api/state?participantId=${encodeURIComponent(id)}`);
+    const state = await request(`/api/state?participantId=${encodeURIComponent(id)}`, {
+      signal: currentController.signal,
+      timeout: 4500,
+    });
+
+    if (participantBusy && !force) return;
     latestState = state;
 
     if (participantRoundId !== null && state.roundId !== participantRoundId) {
@@ -574,9 +774,10 @@ async function refreshParticipant() {
       const result = await request("/api/join", {
         method: "POST",
         body: JSON.stringify({ id, name: participantName }),
+        timeout: 4500,
       });
       latestState = result.state;
-      renderParticipant(result.state);
+      renderParticipant(result.state, true);
       showToast("The quiz was reset. You’re back in the room.");
       return;
     }
@@ -585,11 +786,12 @@ async function refreshParticipant() {
       const result = await request("/api/join", {
         method: "POST",
         body: JSON.stringify({ id, name: participantName }),
+        timeout: 4500,
       });
       participantRoundId = result.state.roundId;
       localStorage.setItem("realtime-quiz-round-id", String(participantRoundId));
       latestState = result.state;
-      renderParticipant(result.state);
+      renderParticipant(result.state, true);
       return;
     }
 
@@ -607,7 +809,9 @@ async function refreshParticipant() {
     localStorage.setItem("realtime-quiz-round-id", String(participantRoundId));
     renderParticipant(state);
   } catch (error) {
-    showToast(error.message);
+    if (error.name !== "AbortError") {
+      showToast(error.message);
+    }
   } finally {
     participantRefreshing = false;
   }

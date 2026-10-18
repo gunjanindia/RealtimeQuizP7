@@ -116,11 +116,12 @@ const initialJoinUrl = configuredJoinUrl;
 
 async function acquireStateLock() {
   const lockToken = crypto.randomBytes(24).toString("hex");
-  const deadline = Date.now() + 4000;
+  const deadline = Date.now() + 7000;
   while (Date.now() < deadline) {
     const acquired = await redis.set(REDIS_LOCK_KEY, lockToken, { nx: true, px: 10_000 });
     if (acquired === "OK") return lockToken;
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    const jitter = 25 + Math.floor(Math.random() * 35);
+    await new Promise((resolve) => setTimeout(resolve, jitter));
   }
   throw new Error("Quiz state is busy. Please retry the request.");
 }
@@ -196,21 +197,30 @@ function json(response, status, data) {
 function readBody(request) {
   return new Promise((resolve, reject) => {
     let body = "";
+    const timeout = setTimeout(() => {
+      reject(new Error("Request timed out reading body"));
+      request.destroy();
+    }, 10000);
     request.on("data", (chunk) => {
       body += chunk;
       if (body.length > 16_384) {
+        clearTimeout(timeout);
         reject(new Error("Request body is too large"));
         request.destroy();
       }
     });
     request.on("end", () => {
+      clearTimeout(timeout);
       try {
         resolve(JSON.parse(body || "{}"));
       } catch {
         reject(new Error("Invalid JSON"));
       }
     });
-    request.on("error", reject);
+    request.on("error", (err) => {
+      clearTimeout(timeout);
+      reject(err);
+    });
   });
 }
 
