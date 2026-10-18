@@ -8,29 +8,63 @@ const { Redis } = require("@upstash/redis");
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const CONFIG_FILE = path.join(__dirname, "quiz-config.json");
-const ADMIN_PASSWORD = process.env.QUIZ_ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex");
+const ADMIN_PASSWORD = process.env.QUIZ_ADMIN_PASSWORD || "admin123";
 const redisUrl =
   process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || "";
 const redisToken =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || "";
-if (Boolean(redisUrl) !== Boolean(redisToken)) {
-  throw new Error("Set both Upstash Redis REST URL and token environment variables.");
-}
-if (process.env.VERCEL && (!redisUrl || !process.env.QUIZ_ADMIN_PASSWORD)) {
-  throw new Error(
-    "Vercel deployments require Upstash Redis credentials and QUIZ_ADMIN_PASSWORD environment variables.",
+
+let redis = null;
+if (redisUrl && redisToken) {
+  try {
+    redis = new Redis({ url: redisUrl, token: redisToken });
+  } catch (error) {
+    console.error("Failed to connect to Upstash Redis:", error.message);
+  }
+} else if (redisUrl || redisToken) {
+  console.warn("Only one of Upstash Redis REST URL or token was provided. Falling back to in-memory state.");
+} else if (process.env.VERCEL) {
+  console.warn(
+    "Running on Vercel without Upstash Redis credentials. Using in-memory state fallback. " +
+    "For multi-instance state sync across serverless invocations, please add " +
+    "UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, and QUIZ_ADMIN_PASSWORD in Vercel Project Settings."
   );
 }
-const redis = redisUrl ? new Redis({ url: redisUrl, token: redisToken }) : null;
+
 const REDIS_STATE_KEY = "realtime-quiz:state";
 const REDIS_LOCK_KEY = "realtime-quiz:state-lock";
+
 let defaultQuestions = [];
 try {
-  const savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-  if (Array.isArray(savedConfig.questions) && savedConfig.questions.length > 0) {
-    defaultQuestions = savedConfig.questions;
+  const bundledConfig = require("./quiz-config.json");
+  if (Array.isArray(bundledConfig.questions) && bundledConfig.questions.length > 0) {
+    defaultQuestions = bundledConfig.questions;
   }
-} catch {}
+} catch {
+  try {
+    const savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+    if (Array.isArray(savedConfig.questions) && savedConfig.questions.length > 0) {
+      defaultQuestions = savedConfig.questions;
+    }
+  } catch {}
+}
+
+if (!Array.isArray(defaultQuestions) || defaultQuestions.length === 0) {
+  defaultQuestions = [
+    {
+      id: 1,
+      scenarioId: 1,
+      scenarioTitle: "Scenario 1: Default Question",
+      scenarioText: "Quiz initialization question.",
+      type: "apply",
+      prompt: "Welcome to Quiz Night. Are you ready?",
+      options: ["Yes", "Ready", "Let's Go", "Always"],
+      correct: 0,
+      explanation: "Default sample question",
+      slides: [1]
+    }
+  ];
+}
 
 const MAX_QUESTIONS = 100;
 const OPTION_COUNT = 4;
@@ -97,23 +131,34 @@ let configuredJoinUrl = process.env.QUIZ_PUBLIC_URL
 
 if (!redis) {
   try {
-    const savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-    if (savedConfig.joinUrl !== undefined) {
-      if (typeof savedConfig.joinUrl !== "string") {
-        throw new Error("Saved quiz configuration must contain a joinUrl string.");
-      }
-      configuredJoinUrl = configuredJoinUrl || normalizeJoinUrl(savedConfig.joinUrl);
+    let savedConfig = null;
+    try {
+      savedConfig = require("./quiz-config.json");
+    } catch {
+      savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
     }
-    if (savedConfig.questions !== undefined) {
-      questions = normalizeQuestions(savedConfig.questions);
+    if (savedConfig) {
+      if (savedConfig.joinUrl !== undefined) {
+        if (typeof savedConfig.joinUrl === "string") {
+          configuredJoinUrl = configuredJoinUrl || normalizeJoinUrl(savedConfig.joinUrl);
+        }
+      }
+      if (Array.isArray(savedConfig.questions) && savedConfig.questions.length > 0) {
+        questions = normalizeQuestions(savedConfig.questions);
+      }
     }
   } catch (error) {
     if (error.code !== "ENOENT") {
-      throw new Error(`Could not read ${CONFIG_FILE}: ${error.message}`);
+      console.warn(`Could not read quiz configuration: ${error.message}`);
     }
   }
 }
-questions = normalizeQuestions(questions);
+try {
+  questions = normalizeQuestions(questions);
+} catch (err) {
+  console.warn("Could not normalize questions, using defaults:", err.message);
+  questions = normalizeQuestions(defaultQuestions);
+}
 const initialJoinUrl = configuredJoinUrl;
 
 async function acquireStateLock() {
@@ -369,7 +414,7 @@ function normalizeJoinUrl(value) {
 }
 
 async function saveLocalConfig(joinUrl, questionList) {
-  if (redis) return;
+  if (redis || process.env.VERCEL) return;
   const temporaryFile = `${CONFIG_FILE}.tmp`;
   let baseConfig = {};
   try {
@@ -380,11 +425,15 @@ async function saveLocalConfig(joinUrl, questionList) {
     ...(joinUrl ? { joinUrl } : {}),
     questions: questionList,
   };
-  await fs.promises.writeFile(temporaryFile, `${JSON.stringify(config, null, 2)}\n`, {
-    encoding: "utf8",
-    flag: "w",
-  });
-  await fs.promises.rename(temporaryFile, CONFIG_FILE);
+  try {
+    await fs.promises.writeFile(temporaryFile, `${JSON.stringify(config, null, 2)}\n`, {
+      encoding: "utf8",
+      flag: "w",
+    });
+    await fs.promises.rename(temporaryFile, CONFIG_FILE);
+  } catch (err) {
+    console.warn("Could not save local config to disk:", err.message);
+  }
 }
 
 async function saveJoinUrl(value) {
