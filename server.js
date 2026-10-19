@@ -34,17 +34,76 @@ if (redisUrl && redisToken) {
 const REDIS_STATE_KEY = "realtime-quiz:state";
 const REDIS_LOCK_KEY = "realtime-quiz:state-lock";
 
+let quizMeta = {
+  quizTitle: "Presentation 3 — Cyber Fraud & the Money Trail: Quiz",
+  quizSubtitle: "Law as on October 2026 · Reader v7 (110 slides) · 2 Case Studies + 12 Direct Questions · 18 Questions",
+  timeMinutes: 10,
+};
+
+function applyConfigMeta(config) {
+  if (!config || typeof config !== "object") return;
+  if (config.quiz) quizMeta.quizTitle = config.quiz;
+  if (config.time_minutes) quizMeta.timeMinutes = Number(config.time_minutes) || 10;
+  if (config.structure || config.deck_version || config.law_as_on) {
+    const parts = [];
+    if (config.law_as_on) parts.push(`Law as on ${config.law_as_on}`);
+    if (config.deck_version) parts.push(config.deck_version);
+    if (config.structure) parts.push(config.structure);
+    quizMeta.quizSubtitle = parts.join(" · ");
+  }
+}
+
+function extractQuestions(config) {
+  if (!config || typeof config !== "object") return [];
+  if (Array.isArray(config.questions) && config.questions.length > 0) {
+    return config.questions;
+  }
+  if (Array.isArray(config.scenarios) && config.scenarios.length > 0) {
+    const list = [];
+    let qId = 1;
+    for (const sc of config.scenarios) {
+      if (Array.isArray(sc.questions)) {
+        for (const q of sc.questions) {
+          const letterIndex = ["A", "B", "C", "D"].indexOf(String(q.answer || "").trim().toUpperCase());
+          const correct = typeof q.correct === "number" ? q.correct : (letterIndex >= 0 ? letterIndex : 0);
+          list.push({
+            id: q.id || qId++,
+            scenarioId: sc.id,
+            section: sc.section || (sc.id === 3 ? "direct" : "case"),
+            scenarioTitle: sc.title || `Scenario ${sc.id}`,
+            scenarioText: sc.scenario || "",
+            scenarioSource: sc.source || "",
+            type: q.type || "apply",
+            typeLabel: config.question_types?.[q.type] || (q.type ? q.type.charAt(0).toUpperCase() + q.type.slice(1) : "Apply"),
+            prompt: q.prompt || q.question || "",
+            options: q.options || [],
+            correct,
+            explanation: q.explanation || "",
+            slides: Array.isArray(q.slides) ? q.slides : []
+          });
+        }
+      }
+    }
+    return list;
+  }
+  return [];
+}
+
 let defaultQuestions = [];
 try {
   const bundledConfig = require("./quiz-config.json");
-  if (Array.isArray(bundledConfig.questions) && bundledConfig.questions.length > 0) {
-    defaultQuestions = bundledConfig.questions;
+  applyConfigMeta(bundledConfig);
+  const extracted = extractQuestions(bundledConfig);
+  if (extracted.length > 0) {
+    defaultQuestions = extracted;
   }
 } catch {
   try {
     const savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-    if (Array.isArray(savedConfig.questions) && savedConfig.questions.length > 0) {
-      defaultQuestions = savedConfig.questions;
+    applyConfigMeta(savedConfig);
+    const extracted = extractQuestions(savedConfig);
+    if (extracted.length > 0) {
+      defaultQuestions = extracted;
     }
   } catch {}
 }
@@ -77,7 +136,7 @@ function normalizeQuestions(value) {
     if (!question || typeof question !== "object") {
       throw new Error(`Question ${index + 1} is invalid.`);
     }
-    const prompt = typeof question.prompt === "string" ? question.prompt.trim() : "";
+    const prompt = typeof question.prompt === "string" ? question.prompt.trim() : (typeof question.question === "string" ? question.question.trim() : "");
     const options = Array.isArray(question.options)
       ? question.options.map((option) => (typeof option === "string" ? option.trim() : ""))
       : [];
@@ -90,7 +149,12 @@ function normalizeQuestions(value) {
     ) {
       throw new Error(`Question ${index + 1} must have four answers of 1 to 500 characters each.`);
     }
-    if (!Number.isInteger(question.correct) || question.correct < 0 || question.correct >= OPTION_COUNT) {
+    let correct = question.correct;
+    if (!Number.isInteger(correct) && typeof question.answer === "string") {
+      const idx = ["A", "B", "C", "D"].indexOf(question.answer.trim().toUpperCase());
+      if (idx >= 0) correct = idx;
+    }
+    if (!Number.isInteger(correct) || correct < 0 || correct >= OPTION_COUNT) {
       throw new Error(`Question ${index + 1} must have one correct answer selected.`);
     }
     const scenarioId = Number.isInteger(question.scenarioId)
@@ -104,14 +168,15 @@ function normalizeQuestions(value) {
     return {
       id: question.id || index + 1,
       scenarioId,
+      section: question.section || (scenarioId === 3 ? "direct" : "case"),
       scenarioTitle: typeof question.scenarioTitle === "string" ? question.scenarioTitle.trim() : `Scenario ${scenarioId}`,
-      scenarioText: typeof question.scenarioText === "string" ? question.scenarioText.trim() : "",
-      scenarioSource: typeof question.scenarioSource === "string" ? question.scenarioSource.trim() : "",
+      scenarioText: typeof question.scenarioText === "string" ? question.scenarioText.trim() : (typeof question.scenario === "string" ? question.scenario.trim() : ""),
+      scenarioSource: typeof question.scenarioSource === "string" ? question.scenarioSource.trim() : (typeof question.source === "string" ? question.source.trim() : ""),
       type,
       typeLabel,
       prompt,
       options,
-      correct: question.correct,
+      correct,
       explanation: typeof question.explanation === "string" ? question.explanation.trim() : "",
       slides: Array.isArray(question.slides) ? question.slides.filter(Number.isInteger) : []
     };
@@ -138,13 +203,15 @@ if (!redis) {
       savedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
     }
     if (savedConfig) {
+      applyConfigMeta(savedConfig);
       if (savedConfig.joinUrl !== undefined) {
         if (typeof savedConfig.joinUrl === "string") {
           configuredJoinUrl = configuredJoinUrl || normalizeJoinUrl(savedConfig.joinUrl);
         }
       }
-      if (Array.isArray(savedConfig.questions) && savedConfig.questions.length > 0) {
-        questions = normalizeQuestions(savedConfig.questions);
+      const extracted = extractQuestions(savedConfig);
+      if (extracted.length > 0) {
+        questions = normalizeQuestions(extracted);
       }
     }
   } catch (error) {
@@ -317,12 +384,13 @@ function getState(participantId, isAdmin = false, request) {
     roundId,
     joinUrl: getJoinUrl(request),
     isAdmin,
-    quizTitle: "Presentation 3 — Cyber Fraud & the Money Trail: Scenario Quiz",
-    quizSubtitle: "Law as on October 2026 · Reader v6 (56 slides) · 6 Scenarios · 24 Questions",
-    timeMinutes: 10,
+    quizTitle: quizMeta.quizTitle,
+    quizSubtitle: quizMeta.quizSubtitle,
+    timeMinutes: quizMeta.timeMinutes,
     questions: questions.map((q) => ({
       id: q.id,
       scenarioId: q.scenarioId,
+      section: q.section,
       scenarioTitle: q.scenarioTitle,
       scenarioText: q.scenarioText,
       scenarioSource: q.scenarioSource,
@@ -549,7 +617,7 @@ async function handleApiRequest(request, response, url) {
       "Status",
       ...questions.map(
         (question, index) =>
-          `Q${index + 1} [Scenario ${question.scenarioId} · ${question.typeLabel || question.type}]: ${question.prompt}`,
+          `Q${index + 1} [${question.section === "direct" ? "Direct" : `Scenario ${question.scenarioId}`} · ${question.typeLabel || question.type}]: ${question.prompt}`,
       ),
       "Score",
       "Total time",

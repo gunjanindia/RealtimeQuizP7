@@ -284,7 +284,7 @@ function questionEditorForm(question, index, disabled = false) {
     <form class="question-editor-form" data-index="${index}">
       <div class="editor-grid-2">
         <div>
-          <label class="question-prompt-label" for="question-${index}-scenarioId">SCENARIO NUMBER (1–6)</label>
+          <label class="question-prompt-label" for="question-${index}-scenarioId">SCENARIO / SECTION NUMBER</label>
           <input
             class="question-prompt-input"
             id="question-${index}-scenarioId"
@@ -333,8 +333,7 @@ function questionEditorForm(question, index, disabled = false) {
         name="scenarioText"
         rows="3"
         maxlength="2000"
-        placeholder="Detailed scenario facts..."
-        required
+        placeholder="Detailed scenario facts (leave blank for direct questions)..."
         ${disabled ? "disabled" : ""}
       >${escapeHtml(question.scenarioText || "")}</textarea>
 
@@ -442,12 +441,12 @@ function renderDashboard(state) {
             <div class="question-heading-left">
               <div class="admin-q-tags">
                 <span class="question-card-number">#${String(index + 1).padStart(2, "0")}</span>
-                <span class="admin-scenario-pill">Scenario ${scenarioNum}</span>
+                <span class="admin-scenario-pill">${question.section === "direct" ? "Direct" : `Scenario ${scenarioNum}`}</span>
                 <span class="admin-type-pill admin-type-${typeKey}">${escapeHtml(question.typeLabel || typeKey.toUpperCase())}</span>
               </div>
               <h4 class="question-preview-title">${escapeHtml(question.prompt)}</h4>
               <div class="admin-scenario-context">
-                <strong>Case:</strong> ${escapeHtml(question.scenarioTitle || `Scenario ${scenarioNum}`)}
+                <strong>${question.section === "direct" ? "Section:" : "Case:"}</strong> ${escapeHtml(question.scenarioTitle || (question.section === "direct" ? "Direct questions" : `Scenario ${scenarioNum}`))}
               </div>
             </div>
             <div class="question-card-actions">

@@ -1238,6 +1238,12 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   text-transform: uppercase;
 }
 
+.scenario-pill.direct-pill {
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  color: #38bdf8;
+}
+
 .sub-q-pill {
   display: inline-flex;
   align-items: center;

@@ -206,7 +206,7 @@ function renderDashboard(state) {
         </a>
         <div class="topbar-center">
           <div class="event-tag"><span class="status-dot ${state.phase === "live" ? "is-live" : ""}"></span>${phaseLabel(state.phase)}</div>
-          <span class="quiz-length"><span class="length-dot"></span>6 Scenarios · ${state.questions.length} Questions</span>
+          <span class="quiz-length"><span class="length-dot"></span>${state.quizSubtitle ? escapeHtml(state.quizSubtitle) : `${state.questions.length} Questions`}</span>
         </div>
         <div class="topbar-actions">
           <button class="topbar-link-button" type="button" id="share-link">Copy join link <span>↗</span></button>
@@ -282,9 +282,9 @@ function renderDashboard(state) {
           <!-- 75% Screen: BIG QR CODE -->
           <article class="panel stage-qr-panel">
             <div class="stage-qr-header">
-              <div class="stage-qr-eyebrow"><span class="eyebrow-line"></span> PRESENTATION 3 · CYBER FRAUD & THE MONEY TRAIL</div>
-              <h2 class="stage-qr-title">Scan To Join The Scenario Quiz</h2>
-              <p class="stage-qr-subtitle">Law as on October 2026 · Reader v6 (56 slides) · 6 Real-World Cases · 24 High-Stakes Questions</p>
+              <div class="stage-qr-eyebrow"><span class="eyebrow-line"></span> ${escapeHtml((state.quizTitle || "PRESENTATION 3 · CYBER FRAUD & THE MONEY TRAIL").toUpperCase())}</div>
+              <h2 class="stage-qr-title">Scan To Join The Quiz</h2>
+              <p class="stage-qr-subtitle">${escapeHtml(state.quizSubtitle || `Law as on October 2026 · Reader v7 (110 slides) · ${state.questions.length} Questions`)}</p>
             </div>
 
             <div class="stage-qr-center">
@@ -612,8 +612,17 @@ function renderParticipant(state, force = false) {
     return;
   }
   const progress = Math.round((questionIndex / state.questions.length) * 100);
-  const scenarioNum = question.scenarioId || (Math.floor(questionIndex / 4) + 1);
-  const qInScenario = (questionIndex % 4) + 1;
+  const scenarioQuestions = state.questions.filter(
+    (q) => (q.scenarioId || q.scenarioTitle) === (question.scenarioId || question.scenarioTitle)
+  );
+  const qInScenario = scenarioQuestions.findIndex((q) => q.id === question.id) + 1;
+  const totalInScenario = scenarioQuestions.length || 1;
+  const isDirect = question.section === "direct" || !question.scenarioText;
+  const caseScenarios = state.questions.filter((q) => q.scenarioText && q.section !== "direct");
+  const uniqueCaseIds = [...new Set(caseScenarios.map((q) => q.scenarioId || q.scenarioTitle))];
+  const caseNum = uniqueCaseIds.indexOf(question.scenarioId || question.scenarioTitle) + 1;
+  const scenarioNum = question.scenarioId || (caseNum > 0 ? caseNum : 1);
+
   const typeKey = (question.type || "apply").toLowerCase();
   const typeIcons = {
     apply: "🎯",
@@ -637,22 +646,28 @@ function renderParticipant(state, force = false) {
 
       <div class="scenario-tracker-bar">
         <div class="tracker-left">
-          <span class="scenario-pill">SCENARIO ${scenarioNum} OF 6</span>
-          <span class="sub-q-pill">Question ${qInScenario} of 4</span>
+          ${isDirect ? `
+            <span class="scenario-pill direct-pill">DIRECT QUESTIONS</span>
+            <span class="sub-q-pill">Question ${qInScenario} of ${totalInScenario}</span>
+          ` : `
+            <span class="scenario-pill">CASE STUDY ${caseNum > 0 ? caseNum : scenarioNum} OF ${uniqueCaseIds.length || 2}</span>
+            <span class="sub-q-pill">Question ${qInScenario} of ${totalInScenario}</span>
+          `}
         </div>
         <div class="tracker-right">
           <span class="type-pill type-pill-${typeKey}">${typeIcon} ${escapeHtml(typeBadgeText)}</span>
         </div>
       </div>
 
-      <!-- SCENARIO CASE BRIEFING DOSSIER -->
+      <!-- SCENARIO CASE BRIEFING DOSSIER (Rendered for case studies) -->
+      ${question.scenarioText ? `
       <section class="scenario-dossier-card" aria-label="Scenario briefing facts">
         <div class="scenario-dossier-top">
           <div class="scenario-dossier-title-wrap">
             <span class="scenario-dossier-icon">📁</span>
             <div>
-              <div class="scenario-dossier-eyebrow">CASE BRIEFING #${scenarioNum}</div>
-              <h2 class="scenario-dossier-title">${escapeHtml(question.scenarioTitle || `Scenario ${scenarioNum}`)}</h2>
+              <div class="scenario-dossier-eyebrow">CASE BRIEFING #${caseNum > 0 ? caseNum : scenarioNum}</div>
+              <h2 class="scenario-dossier-title">${escapeHtml(question.scenarioTitle || `Case Study ${scenarioNum}`)}</h2>
             </div>
           </div>
         </div>
@@ -664,7 +679,7 @@ function renderParticipant(state, force = false) {
             <span class="source-pin">📌</span>
             <span>Source: <strong>${escapeHtml(question.scenarioSource)}</strong></span>
           </div>` : ""}
-      </section>
+      </section>` : ""}
 
       <!-- QUESTION PROMPT & OPTIONS -->
       <section class="question-action-card">
@@ -722,7 +737,7 @@ async function submitAnswer(questionIndex, optionIndex) {
     }
   });
 
-  const totalQuestions = latestState?.questions?.length || 24;
+  const totalQuestions = latestState?.questions?.length || 18;
   const isLastQuestion = questionIndex >= totalQuestions - 1;
   const nextQuestionNum = questionIndex + 2;
 
@@ -770,13 +785,13 @@ function renderParticipantResult(state) {
 
   let performanceTitle = "Investigative Trainee";
   let performanceDesc = "Review cyber crime statutory provisions and audit trail records.";
-  if (score >= 21) {
+  if (pct >= 85) {
     performanceTitle = "Cyber Fraud Master Investigator 🏆";
     performanceDesc = "Exceptional mastery of cyber crime law, money trails, and audit evidence!";
-  } else if (score >= 17) {
+  } else if (pct >= 70) {
     performanceTitle = "Senior Fraud Analyst ⭐";
     performanceDesc = "Strong command of money trail analysis, mule networks, and departmental safeguards.";
-  } else if (score >= 12) {
+  } else if (pct >= 50) {
     performanceTitle = "Competent Legal & Tax Analyst 🛡️";
     performanceDesc = "Good understanding of core principles, with room to refine evidence nuances.";
   }
@@ -786,8 +801,12 @@ function renderParticipantResult(state) {
       const answer = person.answers[index];
       const correct = person.correctOptionIndexes?.[index];
       const isCorrect = answer !== null && answer === correct;
-      const scenarioNum = question.scenarioId || (Math.floor(index / 4) + 1);
-      const qInScenario = (index % 4) + 1;
+      const scenarioQuestions = state.questions.filter(
+        (q) => (q.scenarioId || q.scenarioTitle) === (question.scenarioId || question.scenarioTitle)
+      );
+      const qInScenario = scenarioQuestions.findIndex((q) => q.id === question.id) + 1;
+      const isDirect = question.section === "direct" || !question.scenarioText;
+      const scenarioTag = isDirect ? `Direct Question ${qInScenario}` : `Case Study ${question.scenarioId || 1} · Q${qInScenario}`;
       const typeKey = (question.type || "apply").toLowerCase();
       const hasExplanation = Boolean(question.explanation);
       const hasSlides = Array.isArray(question.slides) && question.slides.length > 0;
@@ -796,7 +815,7 @@ function renderParticipantResult(state) {
         <article class="review-scenario-card ${isCorrect ? "is-review-correct" : "is-review-wrong"}">
           <div class="review-card-top">
             <div class="review-tags">
-              <span class="review-scenario-tag">Scenario ${scenarioNum} · Q${qInScenario}</span>
+              <span class="review-scenario-tag">${scenarioTag}</span>
               <span class="review-type-tag review-type-${typeKey}">${escapeHtml(question.typeLabel || typeKey.toUpperCase())}</span>
               <span class="review-overall-tag">#${index + 1}</span>
             </div>
@@ -805,9 +824,10 @@ function renderParticipantResult(state) {
             </span>
           </div>
 
+          ${question.scenarioTitle ? `
           <div class="review-scenario-ref-bar">
-            <span>📁 ${escapeHtml(question.scenarioTitle || `Scenario ${scenarioNum}`)}</span>
-          </div>
+            <span>📁 ${escapeHtml(question.scenarioTitle)}</span>
+          </div>` : ""}
 
           <h4 class="review-prompt">${escapeHtml(question.prompt)}</h4>
 
@@ -852,7 +872,7 @@ function renderParticipantResult(state) {
         <div class="score-pct-badge">${pct}% Accuracy</div>
         <div class="performance-title">${performanceTitle}</div>
         <p class="performance-desc">${performanceDesc}</p>
-        <p class="answered-summary">${totalAnswered === state.questions.length ? "All 24 scenario questions completed." : `Answered ${totalAnswered} of ${state.questions.length} questions.`}</p>
+        <p class="answered-summary">${totalAnswered === state.questions.length ? `All ${state.questions.length} questions completed.` : `Answered ${totalAnswered} of ${state.questions.length} questions.`}</p>
         ${state.phase === "ended" && rank ? `<div class="rank-ribbon">YOU PLACED <strong>#${rank} ON THE BOARD</strong></div>` : ""}
       </section>
 
