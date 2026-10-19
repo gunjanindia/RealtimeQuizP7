@@ -1,5 +1,4 @@
 node_modules/
-quiz-config.json
 quiz-config.json.tmp
 .env
 .env.*
