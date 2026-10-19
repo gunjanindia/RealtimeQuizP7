@@ -1,0 +1,1008 @@
+{
+  "joinUrl": "http://192.168.29.22:3000/?join=1",
+  "quiz": "Presentation 7 — Open Source Intelligence for the Income Tax Officer: Quiz",
+  "version": "3.0",
+  "law_as_on": "October 2026",
+  "deck_version": "P7 v3 (39 slides)",
+  "time_minutes": 15,
+  "structure": "4 case studies × 3 questions + 12 direct questions = 24 questions",
+  "question_types": {
+    "apply": "Apply",
+    "law": "Law",
+    "evidence": "Evidence",
+    "precaution": "Precaution"
+  },
+  "scenarios": [
+    {
+      "id": 1,
+      "section": "case",
+      "title": "Case study 1 — The Panama Papers and the Multi-Agency Group",
+      "scenario": "In April 2016 the International Consortium of Investigative Journalists (ICIJ) and partner newspapers, including The Indian Express, published the Panama Papers — documents leaked from the Panamanian law firm Mossack Fonseca. ICIJ later placed the offshore entities, their officers and addresses in its public Offshore Leaks database. The Government set up a Multi-Agency Group chaired by the Chairman, CBDT, with the Enforcement Directorate, the RBI, FIU-IND and CBDT’s Foreign Tax and Tax Research Division. In a statement laid in the Rajya Sabha on 27 July 2021, the Finance Minister said that, as on 1 June 2021, undisclosed credits of about ₹20,078 crore had been detected in India-linked entities in the Panama Papers, and criminal complaints had been filed in 46 cases.",
+      "source": "Rajya Sabha Starred Question 84, 27 July 2021 (as reported by TaxGuru); ICIJ Offshore Leaks database",
+      "questions": [
+        {
+          "type": "apply",
+          "question": "In the session’s terms, how may an officer use an entry about an Indian resident in the ICIJ Offshore Leaks database?",
+          "options": [
+            "As evidence on its own, because reputed newspapers later published the documents",
+            "Not at all, because the material first leaked from a law firm’s computer systems",
+            "As a lead, used freely and recorded, with each fact then confirmed by lawful means",
+            "Only after buying the original leaked files from the journalists who obtained them"
+          ],
+          "answer": "C",
+          "explanation": "A leak curated and published by journalists is the first tier of slide 33: a lead you may use freely, recording its source. Facts are then confirmed through treaty requests and other lawful powers before anything is relied on.",
+          "slides": [
+            15,
+            17,
+            33
+          ]
+        },
+        {
+          "type": "law",
+          "question": "To confirm that the resident holds an account with a bank in a treaty country, which route should the officer use?",
+          "options": [
+            "A request under Section 159 Income-tax Act 2025 [old Sections 90, 90A], through the FT&TR Division",
+            "A notice under Section 94 BNSS [old Section 91 CrPC], sent directly to the foreign bank’s head office",
+            "A call for information under Section 252 [old Section 133(6)] addressed to the foreign bank abroad",
+            "A search under Section 247 [old Section 132] of the bank’s public website for the holder’s details"
+          ],
+          "answer": "A",
+          "explanation": "Information held abroad is obtained by exchange of information under a tax treaty or agreement — Section 159 of the 2025 Act [old Sections 90, 90A] — routed through the FT&TR Division, together with CRS and FATCA data.",
+          "slides": [
+            35
+          ]
+        },
+        {
+          "type": "precaution",
+          "question": "About ₹20,078 crore of undisclosed credits had been detected by June 2021. What is the main lesson for an officer who works on such a leak?",
+          "options": [
+            "Leak data is reliable enough for additions to be made directly from the database entries",
+            "Every person named in a leak should be searched at once, before the evidence can be moved",
+            "Offshore entities are illegal in themselves, so each one found is undisclosed income",
+            "A leak only starts the work: each fact must still be proved from lawful sources"
+          ],
+          "answer": "D",
+          "explanation": "A leak is a pointer, never the proof. Detected credits become tax only after the facts are established from lawful sources — treaty replies, records, statements — and the assessee’s explanation is considered.",
+          "slides": [
+            33,
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "section": "case",
+      "title": "Case study 2 — Kerala YouTubers",
+      "scenario": "In June 2023 the Income Tax Department inspected the homes and offices of several well-known YouTubers in Kerala. Press reports said that officials had first listed about 30 content creators and monitored their platform activity and income with the help of service providers, then inspected 10 to 13 of them, and that the creators were found to owe taxes of almost ₹25 crore, some having paid no tax at all.",
+      "source": "Onmanorama, 22 June 2023; Kerala Kaumudi, 23 June 2023 (press reports)",
+      "questions": [
+        {
+          "type": "apply",
+          "question": "Which of the eight tax uses of OSINT on slide 8 does this case mainly illustrate?",
+          "options": [
+            "Benami property — finding who really uses a property held in another person’s name",
+            "Creators — public audience, brand deals and events that show income from content",
+            "Shell firms — many companies sharing the same phone number, email and address",
+            "Recovery — locating a defaulter and his assets after a tax demand has been raised"
+          ],
+          "answer": "B",
+          "explanation": "Content creators show their business in public: subscriber and view counts, brand tags and paid partnerships, events and merchandise. That makes them the ‘creators’ use of OSINT on slide 8.",
+          "slides": [
+            8,
+            37
+          ]
+        },
+        {
+          "type": "law",
+          "question": "Which power lets the Department obtain the creators’ platform payouts and bank credits from the platforms and banks in India?",
+          "options": [
+            "Section 94 BNSS [old Section 91 CrPC], issued by the Assessing Officer to the platform",
+            "Section 247 [old Section 132], because platform records are always virtual digital space",
+            "Section 3(c)(ii) of the DPDP Act, because the creators had published their own channels",
+            "Section 252 Income-tax Act 2025 [old Section 133(6)], calling for information from them"
+          ],
+          "answer": "D",
+          "explanation": "Records held by third parties in India — banks, platforms, payment companies — are obtained by a call for information under Section 252 [old Section 133(6)]. Section 94 BNSS is a police and court power, not the Assessing Officer’s.",
+          "slides": [
+            35
+          ]
+        },
+        {
+          "type": "precaution",
+          "question": "A creator’s video shows him driving a new luxury car. Before treating it as his own expenditure, what must the officer rule out?",
+          "options": [
+            "That the car was lent or given by a brand as a sponsored deal, not bought by him",
+            "That the video earned enough views to be counted as part of his business receipts",
+            "That his subscriber count grew during the year in which the video was uploaded",
+            "That the platform paid him for that particular video within the same financial year"
+          ],
+          "answer": "A",
+          "explanation": "Verify twice: is it genuine? A car in a creator’s video may be a brand’s loan, a barter deal or a rental. Establish ownership and payment from official records before treating it as expenditure; a barter deal may itself be income in kind.",
+          "slides": [
+            2,
+            34
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "section": "case",
+      "title": "Case study 3 — DGGI and the 115 fake firms",
+      "scenario": "In October 2020 the Directorate General of GST Intelligence (DGGI) reported about 115 fake firms across nine GST commissionerates that had passed on about ₹50.24 crore of input tax credit through invoices without any real supply. Data analytics first flagged 55 firms that shared a few mobile numbers and email IDs. DGGI then obtained the IP addresses used to file their returns and the mobile numbers that received OTPs and, with the help of the service providers, traced the premises from which the filings were made.",
+      "source": "Business Today, 23 October 2020 (allegations as reported)",
+      "questions": [
+        {
+          "type": "apply",
+          "question": "Moving from one suspect firm’s mobile number to other firms registered with the same number is an example of what?",
+          "options": [
+            "Geolocation — working out where a photograph was taken from what can be seen in it",
+            "Pivoting — using each new identifier as the starting point for the next search",
+            "Chronolocation — working out when a photograph or a video was actually taken",
+            "Account probing — testing whether a number has an account on a payment app"
+          ],
+          "answer": "B",
+          "explanation": "Pivoting means using each find as the next search: a mobile number leads to more registrations, those give directors and addresses, and shared IP addresses then lead to a physical place.",
+          "slides": [
+            34
+          ]
+        },
+        {
+          "type": "law",
+          "question": "How did the IP addresses lead lawfully to the physical premises?",
+          "options": [
+            "Through a commercial bot that returns an address for any IP address in seconds",
+            "Through a public WHOIS search, which shows the subscriber’s name and address",
+            "Through the service providers’ own records, obtained from them by lawful process",
+            "Through a tracking link sent to the firms that revealed their location when clicked"
+          ],
+          "answer": "C",
+          "explanation": "An IP address alone shows only the ISP. The subscriber and premises come from the service provider’s records, obtained by lawful process — as DGGI did.",
+          "slides": [
+            31,
+            35
+          ]
+        },
+        {
+          "type": "evidence",
+          "question": "To rely on printouts of the GST portal’s filing logs in court, what must accompany them?",
+          "options": [
+            "A certificate under Section 63 BSA [old Section 65B IEA], with the hash value",
+            "An affidavit from the officer that he personally saw the logs on the portal",
+            "A written statement from each accused admitting the logs relate to his firm",
+            "A copy of the GST registration certificate of each of the firms involved"
+          ],
+          "answer": "A",
+          "explanation": "A printout of a computer record is secondary electronic evidence. It needs a Section 63 BSA [old Section 65B] certificate — Part A by the person in charge, Part B by an expert, with the hash value.",
+          "slides": [
+            35,
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "section": "case",
+      "title": "Case study 4 — Mr R (illustrative)",
+      "scenario": "Mr R is an invented person used throughout the session. He declares a gross total income of ₹7.2 lakh as a small trader. Desk research finds an Instagram post of a ‘new SUV’, a reel of a Dubai holiday, a Justdial listing for his shop with 340 reviews, a second GSTIN at the same address, and his wife listed on MCA21 as a director of two companies. A reverse image search shows that the SUV photograph is a dealer’s stock image. A colleague also forwards a bot report that shows Mr R’s old password from a data breach.",
+      "source": "Illustrative case — P7 deck, slides 2 and 34 (invented person)",
+      "questions": [
+        {
+          "type": "apply",
+          "question": "What does the reverse image search result mean for the SUV post?",
+          "options": [
+            "It proves that Mr R does not own an SUV, so the vehicle line of enquiry can be closed",
+            "It proves that Mr R owns an SUV, because he chose to post that particular model",
+            "It shows the post is fake, so all his other posts must be set aside as unreliable",
+            "The photo is no evidence of a car; whether he owns one must be checked officially"
+          ],
+          "answer": "D",
+          "explanation": "A stock photograph proves nothing either way. It is not evidence of ownership, nor of its absence. Whether Mr R owns a vehicle is checked from Vahan through official channels.",
+          "slides": [
+            16,
+            34
+          ]
+        },
+        {
+          "type": "precaution",
+          "question": "What should the officer do with the forwarded bot report showing Mr R’s old password?",
+          "options": [
+            "Try the password once on his email, only to confirm that the report is genuine",
+            "Record that it was received, not rely on it, and establish facts lawfully",
+            "Delete it without any note, so that the file holds no trace of leaked data",
+            "Quote it in the notice, as courts admit relevant evidence however obtained"
+          ],
+          "answer": "B",
+          "explanation": "Honesty in the file: record when and how the report arrived, mark it as not relied on, and establish every fact from lawful sources. Trying the password would be unauthorised access and identity theft.",
+          "slides": [
+            33,
+            38
+          ]
+        },
+        {
+          "type": "law",
+          "question": "GST returns show that the second GSTIN’s turnover is missing from his return. What is the proportionate next step?",
+          "options": [
+            "A search under Section 247 [old Section 132] of his home, shop and both GSTIN premises",
+            "A request to NATGRID for his wife’s travel and toll records for the past ten years",
+            "Enquiry and, if justified, notice under Section 279 [old Sections 147–151]",
+            "No action, because the material was first found through OSINT and not from AIS"
+          ],
+          "answer": "C",
+          "explanation": "On slide 36 the lead is now from an open source, officially corroborated, material and documented — but not large-scale concealment. So the step is enquiry and, if justified, notice or reassessment, not a search.",
+          "slides": [
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "section": "direct",
+      "title": "Direct questions",
+      "scenario": "",
+      "source": "",
+      "questions": [
+        {
+          "type": "apply",
+          "question": "An assessee’s Instagram account is set to private. Are its posts open source intelligence?",
+          "options": [
+            "No — a locked account is not public, so its contents are not open source",
+            "Yes — anyone could ask to follow him, so the account counts as public",
+            "Yes — if a colleague already follows him and can show the posts to you",
+            "No — but only because Instagram is a foreign company with servers abroad"
+          ],
+          "answer": "A",
+          "explanation": "OSINT must be public, lawful and used for a purpose. A private account fails the first test; its contents are reachable only in an authorised search, as virtual digital space.",
+          "slides": [
+            4
+          ]
+        },
+        {
+          "type": "apply",
+          "question": "Which of the three axes of slide 10 decides whether an officer may use a tool?",
+          "options": [
+            "Axis A — whether it is used by an individual, a unit or the Government",
+            "Axis B — whether it is free, freemium, a paid subscription or not for sale",
+            "Axes A and B together — the scale of use and the price paid for the tool",
+            "Axis C — where its data comes from: open, licensed, leaked or telecom"
+          ],
+          "answer": "D",
+          "explanation": "Only Axis C, the source of the data, decides legality. Who uses a tool and what it costs decide convenience; cost never changes the answer.",
+          "slides": [
+            10,
+            11,
+            12
+          ]
+        },
+        {
+          "type": "precaution",
+          "question": "A breach dump is offered free on a Telegram channel. In the session’s terms it is…",
+          "options": [
+            "Open source, because anyone can download it without paying or logging in",
+            "Licensed data, because the channel owner has chosen to share it with users",
+            "Publicly available but not open source, as it was never lawfully published",
+            "Official closed data, because it first came from an organisation’s systems"
+          ],
+          "answer": "C",
+          "explanation": "Easy to get is not lawful to use. Leaked data was never lawfully published, however freely it circulates — slide 15’s ‘publicly available ≠ open source’.",
+          "slides": [
+            15
+          ]
+        },
+        {
+          "type": "evidence",
+          "question": "A bot returns the exact building address and azimuth of the tower for a cell ID. Where can this data lawfully come from?",
+          "options": [
+            "Crowd-sourced tower maps such as OpenCellID, which anyone may consult",
+            "Only the telecom operator, on a lawful requisition through proper channels",
+            "The TAC database, which links each cell ID to the handset make and model",
+            "A WHOIS look-up, which lists the owner and address of every mobile tower"
+          ],
+          "answer": "B",
+          "explanation": "Exact cell-site addresses and azimuths are the operator’s own data, released only on lawful requisition. Public tower maps give only approximate locations.",
+          "slides": [
+            30,
+            31
+          ]
+        },
+        {
+          "type": "apply",
+          "question": "Cyniq’s privacy policy lists “publicly disclosed breaches or leaks” among its sources. Which source test does it fail first?",
+          "options": [
+            "Test 1 — the vendor’s own words",
+            "Test 2 — the labels on its output",
+            "Test 4 — the fresh-SIM test",
+            "Test 6 — the written questionnaire"
+          ],
+          "answer": "A",
+          "explanation": "Test 1 reads the vendor’s own policy and website. A policy that names breaches or leaks is a ‘yes’, and a ‘yes’ to any of the first four tests means red.",
+          "slides": [
+            28,
+            32
+          ]
+        },
+        {
+          "type": "apply",
+          "question": "Why does the fresh-SIM test use a brand-new number in an officer’s own name?",
+          "options": [
+            "A new number makes the tool search faster, because it holds fewer records",
+            "Vendors offer free trial searches only for numbers activated very recently",
+            "A new number is the only kind that a licensed HLR look-up can recognise",
+            "A new number is in no old breach, so IMEI or location must be live telecom"
+          ],
+          "answer": "D",
+          "explanation": "A brand-new number cannot appear in any old breach. If a tool still returns its IMEI, serving cell or location, the data must come from live operator systems. Only the officer’s own data is used.",
+          "slides": [
+            32
+          ]
+        },
+        {
+          "type": "law",
+          "question": "What did the Supreme Court hold in Pooran Mal v. Director of Inspection (Investigation), Income-tax (1973)?",
+          "options": [
+            "Evidence from an illegal search is always excluded, as under the American rule",
+            "Relevant evidence is not excluded merely because it was illegally obtained",
+            "Leaked documents may be used only if the leak was made by a public servant",
+            "Electronic records need a certificate before they can be relied on in court"
+          ],
+          "answer": "B",
+          "explanation": "Pooran Mal held that relevant evidence is not excluded merely because it was obtained by an illegal search, unless the Constitution or a statute expressly or by necessary implication excludes it.",
+          "slides": [
+            33
+          ]
+        },
+        {
+          "type": "evidence",
+          "question": "According to Arjun Panditrao Khotkar (2020), the certificate for secondary electronic evidence is…",
+          "options": [
+            "Optional, if the other side raises no objection to the printout",
+            "Needed only for records held by banks and telecom operators",
+            "A condition precedent to admitting the record in evidence",
+            "Replaced by the oral evidence of the officer who printed it"
+          ],
+          "answer": "C",
+          "explanation": "Khotkar held that the certificate under Section 65B(4) Evidence Act [now Section 63 BSA] is a condition precedent for admitting secondary electronic evidence; it is not needed only where the original device is produced.",
+          "slides": [
+            36
+          ]
+        },
+        {
+          "type": "law",
+          "question": "An assessee’s cloud drive and email inbox are ‘virtual digital space’. When may an officer enter them?",
+          "options": [
+            "Only in a search authorised under Section 247 [old Section 132]",
+            "From his desk, if he finds the password in a breach report",
+            "By a call for information under Section 254 [old Section 133B]",
+            "Whenever the DPDP Act exemption for investigation applies"
+          ],
+          "answer": "A",
+          "explanation": "Section 261(j) of the 2025 Act defines virtual digital space; Section 247 [old Section 132] lets an authorised officer access it during a search. It is never desk OSINT.",
+          "slides": [
+            9,
+            35
+          ]
+        },
+        {
+          "type": "precaution",
+          "question": "During a lawful search, a pen drive is found holding a customer database leaked from a company. In the three tiers of slide 33, it is…",
+          "options": [
+            "Lead freely — the same as a leak curated and published by journalists",
+            "Avoid personally — the same as data bought from a grey-market bot",
+            "Evidence — because it was seized lawfully, it can be relied on as it is",
+            "Lead; record it — received in duty, with every fact re-established lawfully"
+          ],
+          "answer": "D",
+          "explanation": "Material that reaches the Department in the course of duty — a seized device, a tip-off — is the middle tier: use it as a lead, record exactly how it arrived, and establish every fact from lawful sources.",
+          "slides": [
+            33
+          ]
+        },
+        {
+          "type": "law",
+          "question": "An officer creates a fake profile to befriend a target and see his private posts. Which provisions does this engage?",
+          "options": [
+            "Section 252 Income-tax Act 2025 [old Section 133(6)] and Section 63 BSA",
+            "Section 3(c)(ii) and Section 17(1)(c) of the DPDP Act 2023",
+            "Section 319 BNS [old Sections 416, 419 IPC] and Section 66D IT Act",
+            "Section 159 Income-tax Act 2025 [old Sections 90, 90A] and CRS rules"
+          ],
+          "answer": "C",
+          "explanation": "A false identity used to deceive someone into granting access is cheating by personation: Section 319 BNS [old Sections 416, 419 IPC], and Section 66D IT Act when done through a computer resource. It is a red line.",
+          "slides": [
+            38
+          ]
+        },
+        {
+          "type": "evidence",
+          "question": "What does NATGRID’s Gandiva show that a grey-market bot does not?",
+          "options": [
+            "Results within seconds of typing a mobile number into a chat window",
+            "The source of every field, such as VAHAN, SARATHI or CBDT_ITR",
+            "Old passwords from breaches, to help confirm a person’s accounts",
+            "The live location of any handset, without a request to an operator"
+          ],
+          "answer": "B",
+          "explanation": "Gandiva’s resolved profile tags every field with its source. A bot mixes lawful, licensed, stolen and telecom data in one report and labels nothing.",
+          "slides": [
+            20,
+            22,
+            27
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": 1,
+      "scenarioId": 1,
+      "section": "case",
+      "scenarioTitle": "Case study 1 — The Panama Papers and the Multi-Agency Group",
+      "scenarioText": "In April 2016 the International Consortium of Investigative Journalists (ICIJ) and partner newspapers, including The Indian Express, published the Panama Papers — documents leaked from the Panamanian law firm Mossack Fonseca. ICIJ later placed the offshore entities, their officers and addresses in its public Offshore Leaks database. The Government set up a Multi-Agency Group chaired by the Chairman, CBDT, with the Enforcement Directorate, the RBI, FIU-IND and CBDT’s Foreign Tax and Tax Research Division. In a statement laid in the Rajya Sabha on 27 July 2021, the Finance Minister said that, as on 1 June 2021, undisclosed credits of about ₹20,078 crore had been detected in India-linked entities in the Panama Papers, and criminal complaints had been filed in 46 cases.",
+      "scenarioSource": "Rajya Sabha Starred Question 84, 27 July 2021 (as reported by TaxGuru); ICIJ Offshore Leaks database",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "In the session’s terms, how may an officer use an entry about an Indian resident in the ICIJ Offshore Leaks database?",
+      "options": [
+        "As evidence on its own, because reputed newspapers later published the documents",
+        "Not at all, because the material first leaked from a law firm’s computer systems",
+        "As a lead, used freely and recorded, with each fact then confirmed by lawful means",
+        "Only after buying the original leaked files from the journalists who obtained them"
+      ],
+      "correct": 2,
+      "answer": "C",
+      "explanation": "A leak curated and published by journalists is the first tier of slide 33: a lead you may use freely, recording its source. Facts are then confirmed through treaty requests and other lawful powers before anything is relied on.",
+      "slides": [
+        15,
+        17,
+        33
+      ]
+    },
+    {
+      "id": 2,
+      "scenarioId": 1,
+      "section": "case",
+      "scenarioTitle": "Case study 1 — The Panama Papers and the Multi-Agency Group",
+      "scenarioText": "In April 2016 the International Consortium of Investigative Journalists (ICIJ) and partner newspapers, including The Indian Express, published the Panama Papers — documents leaked from the Panamanian law firm Mossack Fonseca. ICIJ later placed the offshore entities, their officers and addresses in its public Offshore Leaks database. The Government set up a Multi-Agency Group chaired by the Chairman, CBDT, with the Enforcement Directorate, the RBI, FIU-IND and CBDT’s Foreign Tax and Tax Research Division. In a statement laid in the Rajya Sabha on 27 July 2021, the Finance Minister said that, as on 1 June 2021, undisclosed credits of about ₹20,078 crore had been detected in India-linked entities in the Panama Papers, and criminal complaints had been filed in 46 cases.",
+      "scenarioSource": "Rajya Sabha Starred Question 84, 27 July 2021 (as reported by TaxGuru); ICIJ Offshore Leaks database",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "To confirm that the resident holds an account with a bank in a treaty country, which route should the officer use?",
+      "options": [
+        "A request under Section 159 Income-tax Act 2025 [old Sections 90, 90A], through the FT&TR Division",
+        "A notice under Section 94 BNSS [old Section 91 CrPC], sent directly to the foreign bank’s head office",
+        "A call for information under Section 252 [old Section 133(6)] addressed to the foreign bank abroad",
+        "A search under Section 247 [old Section 132] of the bank’s public website for the holder’s details"
+      ],
+      "correct": 0,
+      "answer": "A",
+      "explanation": "Information held abroad is obtained by exchange of information under a tax treaty or agreement — Section 159 of the 2025 Act [old Sections 90, 90A] — routed through the FT&TR Division, together with CRS and FATCA data.",
+      "slides": [
+        35
+      ]
+    },
+    {
+      "id": 3,
+      "scenarioId": 1,
+      "section": "case",
+      "scenarioTitle": "Case study 1 — The Panama Papers and the Multi-Agency Group",
+      "scenarioText": "In April 2016 the International Consortium of Investigative Journalists (ICIJ) and partner newspapers, including The Indian Express, published the Panama Papers — documents leaked from the Panamanian law firm Mossack Fonseca. ICIJ later placed the offshore entities, their officers and addresses in its public Offshore Leaks database. The Government set up a Multi-Agency Group chaired by the Chairman, CBDT, with the Enforcement Directorate, the RBI, FIU-IND and CBDT’s Foreign Tax and Tax Research Division. In a statement laid in the Rajya Sabha on 27 July 2021, the Finance Minister said that, as on 1 June 2021, undisclosed credits of about ₹20,078 crore had been detected in India-linked entities in the Panama Papers, and criminal complaints had been filed in 46 cases.",
+      "scenarioSource": "Rajya Sabha Starred Question 84, 27 July 2021 (as reported by TaxGuru); ICIJ Offshore Leaks database",
+      "type": "precaution",
+      "typeLabel": "Precaution",
+      "prompt": "About ₹20,078 crore of undisclosed credits had been detected by June 2021. What is the main lesson for an officer who works on such a leak?",
+      "options": [
+        "Leak data is reliable enough for additions to be made directly from the database entries",
+        "Every person named in a leak should be searched at once, before the evidence can be moved",
+        "Offshore entities are illegal in themselves, so each one found is undisclosed income",
+        "A leak only starts the work: each fact must still be proved from lawful sources"
+      ],
+      "correct": 3,
+      "answer": "D",
+      "explanation": "A leak is a pointer, never the proof. Detected credits become tax only after the facts are established from lawful sources — treaty replies, records, statements — and the assessee’s explanation is considered.",
+      "slides": [
+        33,
+        36
+      ]
+    },
+    {
+      "id": 4,
+      "scenarioId": 2,
+      "section": "case",
+      "scenarioTitle": "Case study 2 — Kerala YouTubers",
+      "scenarioText": "In June 2023 the Income Tax Department inspected the homes and offices of several well-known YouTubers in Kerala. Press reports said that officials had first listed about 30 content creators and monitored their platform activity and income with the help of service providers, then inspected 10 to 13 of them, and that the creators were found to owe taxes of almost ₹25 crore, some having paid no tax at all.",
+      "scenarioSource": "Onmanorama, 22 June 2023; Kerala Kaumudi, 23 June 2023 (press reports)",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "Which of the eight tax uses of OSINT on slide 8 does this case mainly illustrate?",
+      "options": [
+        "Benami property — finding who really uses a property held in another person’s name",
+        "Creators — public audience, brand deals and events that show income from content",
+        "Shell firms — many companies sharing the same phone number, email and address",
+        "Recovery — locating a defaulter and his assets after a tax demand has been raised"
+      ],
+      "correct": 1,
+      "answer": "B",
+      "explanation": "Content creators show their business in public: subscriber and view counts, brand tags and paid partnerships, events and merchandise. That makes them the ‘creators’ use of OSINT on slide 8.",
+      "slides": [
+        8,
+        37
+      ]
+    },
+    {
+      "id": 5,
+      "scenarioId": 2,
+      "section": "case",
+      "scenarioTitle": "Case study 2 — Kerala YouTubers",
+      "scenarioText": "In June 2023 the Income Tax Department inspected the homes and offices of several well-known YouTubers in Kerala. Press reports said that officials had first listed about 30 content creators and monitored their platform activity and income with the help of service providers, then inspected 10 to 13 of them, and that the creators were found to owe taxes of almost ₹25 crore, some having paid no tax at all.",
+      "scenarioSource": "Onmanorama, 22 June 2023; Kerala Kaumudi, 23 June 2023 (press reports)",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "Which power lets the Department obtain the creators’ platform payouts and bank credits from the platforms and banks in India?",
+      "options": [
+        "Section 94 BNSS [old Section 91 CrPC], issued by the Assessing Officer to the platform",
+        "Section 247 [old Section 132], because platform records are always virtual digital space",
+        "Section 3(c)(ii) of the DPDP Act, because the creators had published their own channels",
+        "Section 252 Income-tax Act 2025 [old Section 133(6)], calling for information from them"
+      ],
+      "correct": 3,
+      "answer": "D",
+      "explanation": "Records held by third parties in India — banks, platforms, payment companies — are obtained by a call for information under Section 252 [old Section 133(6)]. Section 94 BNSS is a police and court power, not the Assessing Officer’s.",
+      "slides": [
+        35
+      ]
+    },
+    {
+      "id": 6,
+      "scenarioId": 2,
+      "section": "case",
+      "scenarioTitle": "Case study 2 — Kerala YouTubers",
+      "scenarioText": "In June 2023 the Income Tax Department inspected the homes and offices of several well-known YouTubers in Kerala. Press reports said that officials had first listed about 30 content creators and monitored their platform activity and income with the help of service providers, then inspected 10 to 13 of them, and that the creators were found to owe taxes of almost ₹25 crore, some having paid no tax at all.",
+      "scenarioSource": "Onmanorama, 22 June 2023; Kerala Kaumudi, 23 June 2023 (press reports)",
+      "type": "precaution",
+      "typeLabel": "Precaution",
+      "prompt": "A creator’s video shows him driving a new luxury car. Before treating it as his own expenditure, what must the officer rule out?",
+      "options": [
+        "That the car was lent or given by a brand as a sponsored deal, not bought by him",
+        "That the video earned enough views to be counted as part of his business receipts",
+        "That his subscriber count grew during the year in which the video was uploaded",
+        "That the platform paid him for that particular video within the same financial year"
+      ],
+      "correct": 0,
+      "answer": "A",
+      "explanation": "Verify twice: is it genuine? A car in a creator’s video may be a brand’s loan, a barter deal or a rental. Establish ownership and payment from official records before treating it as expenditure; a barter deal may itself be income in kind.",
+      "slides": [
+        2,
+        34
+      ]
+    },
+    {
+      "id": 7,
+      "scenarioId": 3,
+      "section": "case",
+      "scenarioTitle": "Case study 3 — DGGI and the 115 fake firms",
+      "scenarioText": "In October 2020 the Directorate General of GST Intelligence (DGGI) reported about 115 fake firms across nine GST commissionerates that had passed on about ₹50.24 crore of input tax credit through invoices without any real supply. Data analytics first flagged 55 firms that shared a few mobile numbers and email IDs. DGGI then obtained the IP addresses used to file their returns and the mobile numbers that received OTPs and, with the help of the service providers, traced the premises from which the filings were made.",
+      "scenarioSource": "Business Today, 23 October 2020 (allegations as reported)",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "Moving from one suspect firm’s mobile number to other firms registered with the same number is an example of what?",
+      "options": [
+        "Geolocation — working out where a photograph was taken from what can be seen in it",
+        "Pivoting — using each new identifier as the starting point for the next search",
+        "Chronolocation — working out when a photograph or a video was actually taken",
+        "Account probing — testing whether a number has an account on a payment app"
+      ],
+      "correct": 1,
+      "answer": "B",
+      "explanation": "Pivoting means using each find as the next search: a mobile number leads to more registrations, those give directors and addresses, and shared IP addresses then lead to a physical place.",
+      "slides": [
+        34
+      ]
+    },
+    {
+      "id": 8,
+      "scenarioId": 3,
+      "section": "case",
+      "scenarioTitle": "Case study 3 — DGGI and the 115 fake firms",
+      "scenarioText": "In October 2020 the Directorate General of GST Intelligence (DGGI) reported about 115 fake firms across nine GST commissionerates that had passed on about ₹50.24 crore of input tax credit through invoices without any real supply. Data analytics first flagged 55 firms that shared a few mobile numbers and email IDs. DGGI then obtained the IP addresses used to file their returns and the mobile numbers that received OTPs and, with the help of the service providers, traced the premises from which the filings were made.",
+      "scenarioSource": "Business Today, 23 October 2020 (allegations as reported)",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "How did the IP addresses lead lawfully to the physical premises?",
+      "options": [
+        "Through a commercial bot that returns an address for any IP address in seconds",
+        "Through a public WHOIS search, which shows the subscriber’s name and address",
+        "Through the service providers’ own records, obtained from them by lawful process",
+        "Through a tracking link sent to the firms that revealed their location when clicked"
+      ],
+      "correct": 2,
+      "answer": "C",
+      "explanation": "An IP address alone shows only the ISP. The subscriber and premises come from the service provider’s records, obtained by lawful process — as DGGI did.",
+      "slides": [
+        31,
+        35
+      ]
+    },
+    {
+      "id": 9,
+      "scenarioId": 3,
+      "section": "case",
+      "scenarioTitle": "Case study 3 — DGGI and the 115 fake firms",
+      "scenarioText": "In October 2020 the Directorate General of GST Intelligence (DGGI) reported about 115 fake firms across nine GST commissionerates that had passed on about ₹50.24 crore of input tax credit through invoices without any real supply. Data analytics first flagged 55 firms that shared a few mobile numbers and email IDs. DGGI then obtained the IP addresses used to file their returns and the mobile numbers that received OTPs and, with the help of the service providers, traced the premises from which the filings were made.",
+      "scenarioSource": "Business Today, 23 October 2020 (allegations as reported)",
+      "type": "evidence",
+      "typeLabel": "Evidence",
+      "prompt": "To rely on printouts of the GST portal’s filing logs in court, what must accompany them?",
+      "options": [
+        "A certificate under Section 63 BSA [old Section 65B IEA], with the hash value",
+        "An affidavit from the officer that he personally saw the logs on the portal",
+        "A written statement from each accused admitting the logs relate to his firm",
+        "A copy of the GST registration certificate of each of the firms involved"
+      ],
+      "correct": 0,
+      "answer": "A",
+      "explanation": "A printout of a computer record is secondary electronic evidence. It needs a Section 63 BSA [old Section 65B] certificate — Part A by the person in charge, Part B by an expert, with the hash value.",
+      "slides": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": 10,
+      "scenarioId": 4,
+      "section": "case",
+      "scenarioTitle": "Case study 4 — Mr R (illustrative)",
+      "scenarioText": "Mr R is an invented person used throughout the session. He declares a gross total income of ₹7.2 lakh as a small trader. Desk research finds an Instagram post of a ‘new SUV’, a reel of a Dubai holiday, a Justdial listing for his shop with 340 reviews, a second GSTIN at the same address, and his wife listed on MCA21 as a director of two companies. A reverse image search shows that the SUV photograph is a dealer’s stock image. A colleague also forwards a bot report that shows Mr R’s old password from a data breach.",
+      "scenarioSource": "Illustrative case — P7 deck, slides 2 and 34 (invented person)",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "What does the reverse image search result mean for the SUV post?",
+      "options": [
+        "It proves that Mr R does not own an SUV, so the vehicle line of enquiry can be closed",
+        "It proves that Mr R owns an SUV, because he chose to post that particular model",
+        "It shows the post is fake, so all his other posts must be set aside as unreliable",
+        "The photo is no evidence of a car; whether he owns one must be checked officially"
+      ],
+      "correct": 3,
+      "answer": "D",
+      "explanation": "A stock photograph proves nothing either way. It is not evidence of ownership, nor of its absence. Whether Mr R owns a vehicle is checked from Vahan through official channels.",
+      "slides": [
+        16,
+        34
+      ]
+    },
+    {
+      "id": 11,
+      "scenarioId": 4,
+      "section": "case",
+      "scenarioTitle": "Case study 4 — Mr R (illustrative)",
+      "scenarioText": "Mr R is an invented person used throughout the session. He declares a gross total income of ₹7.2 lakh as a small trader. Desk research finds an Instagram post of a ‘new SUV’, a reel of a Dubai holiday, a Justdial listing for his shop with 340 reviews, a second GSTIN at the same address, and his wife listed on MCA21 as a director of two companies. A reverse image search shows that the SUV photograph is a dealer’s stock image. A colleague also forwards a bot report that shows Mr R’s old password from a data breach.",
+      "scenarioSource": "Illustrative case — P7 deck, slides 2 and 34 (invented person)",
+      "type": "precaution",
+      "typeLabel": "Precaution",
+      "prompt": "What should the officer do with the forwarded bot report showing Mr R’s old password?",
+      "options": [
+        "Try the password once on his email, only to confirm that the report is genuine",
+        "Record that it was received, not rely on it, and establish facts lawfully",
+        "Delete it without any note, so that the file holds no trace of leaked data",
+        "Quote it in the notice, as courts admit relevant evidence however obtained"
+      ],
+      "correct": 1,
+      "answer": "B",
+      "explanation": "Honesty in the file: record when and how the report arrived, mark it as not relied on, and establish every fact from lawful sources. Trying the password would be unauthorised access and identity theft.",
+      "slides": [
+        33,
+        38
+      ]
+    },
+    {
+      "id": 12,
+      "scenarioId": 4,
+      "section": "case",
+      "scenarioTitle": "Case study 4 — Mr R (illustrative)",
+      "scenarioText": "Mr R is an invented person used throughout the session. He declares a gross total income of ₹7.2 lakh as a small trader. Desk research finds an Instagram post of a ‘new SUV’, a reel of a Dubai holiday, a Justdial listing for his shop with 340 reviews, a second GSTIN at the same address, and his wife listed on MCA21 as a director of two companies. A reverse image search shows that the SUV photograph is a dealer’s stock image. A colleague also forwards a bot report that shows Mr R’s old password from a data breach.",
+      "scenarioSource": "Illustrative case — P7 deck, slides 2 and 34 (invented person)",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "GST returns show that the second GSTIN’s turnover is missing from his return. What is the proportionate next step?",
+      "options": [
+        "A search under Section 247 [old Section 132] of his home, shop and both GSTIN premises",
+        "A request to NATGRID for his wife’s travel and toll records for the past ten years",
+        "Enquiry and, if justified, notice under Section 279 [old Sections 147–151]",
+        "No action, because the material was first found through OSINT and not from AIS"
+      ],
+      "correct": 2,
+      "answer": "C",
+      "explanation": "On slide 36 the lead is now from an open source, officially corroborated, material and documented — but not large-scale concealment. So the step is enquiry and, if justified, notice or reassessment, not a search.",
+      "slides": [
+        36
+      ]
+    },
+    {
+      "id": 13,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "An assessee’s Instagram account is set to private. Are its posts open source intelligence?",
+      "options": [
+        "No — a locked account is not public, so its contents are not open source",
+        "Yes — anyone could ask to follow him, so the account counts as public",
+        "Yes — if a colleague already follows him and can show the posts to you",
+        "No — but only because Instagram is a foreign company with servers abroad"
+      ],
+      "correct": 0,
+      "answer": "A",
+      "explanation": "OSINT must be public, lawful and used for a purpose. A private account fails the first test; its contents are reachable only in an authorised search, as virtual digital space.",
+      "slides": [
+        4
+      ]
+    },
+    {
+      "id": 14,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "Which of the three axes of slide 10 decides whether an officer may use a tool?",
+      "options": [
+        "Axis A — whether it is used by an individual, a unit or the Government",
+        "Axis B — whether it is free, freemium, a paid subscription or not for sale",
+        "Axes A and B together — the scale of use and the price paid for the tool",
+        "Axis C — where its data comes from: open, licensed, leaked or telecom"
+      ],
+      "correct": 3,
+      "answer": "D",
+      "explanation": "Only Axis C, the source of the data, decides legality. Who uses a tool and what it costs decide convenience; cost never changes the answer.",
+      "slides": [
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "id": 15,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "precaution",
+      "typeLabel": "Precaution",
+      "prompt": "A breach dump is offered free on a Telegram channel. In the session’s terms it is…",
+      "options": [
+        "Open source, because anyone can download it without paying or logging in",
+        "Licensed data, because the channel owner has chosen to share it with users",
+        "Publicly available but not open source, as it was never lawfully published",
+        "Official closed data, because it first came from an organisation’s systems"
+      ],
+      "correct": 2,
+      "answer": "C",
+      "explanation": "Easy to get is not lawful to use. Leaked data was never lawfully published, however freely it circulates — slide 15’s ‘publicly available ≠ open source’.",
+      "slides": [
+        15
+      ]
+    },
+    {
+      "id": 16,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "evidence",
+      "typeLabel": "Evidence",
+      "prompt": "A bot returns the exact building address and azimuth of the tower for a cell ID. Where can this data lawfully come from?",
+      "options": [
+        "Crowd-sourced tower maps such as OpenCellID, which anyone may consult",
+        "Only the telecom operator, on a lawful requisition through proper channels",
+        "The TAC database, which links each cell ID to the handset make and model",
+        "A WHOIS look-up, which lists the owner and address of every mobile tower"
+      ],
+      "correct": 1,
+      "answer": "B",
+      "explanation": "Exact cell-site addresses and azimuths are the operator’s own data, released only on lawful requisition. Public tower maps give only approximate locations.",
+      "slides": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": 17,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "Cyniq’s privacy policy lists “publicly disclosed breaches or leaks” among its sources. Which source test does it fail first?",
+      "options": [
+        "Test 1 — the vendor’s own words",
+        "Test 2 — the labels on its output",
+        "Test 4 — the fresh-SIM test",
+        "Test 6 — the written questionnaire"
+      ],
+      "correct": 0,
+      "answer": "A",
+      "explanation": "Test 1 reads the vendor’s own policy and website. A policy that names breaches or leaks is a ‘yes’, and a ‘yes’ to any of the first four tests means red.",
+      "slides": [
+        28,
+        32
+      ]
+    },
+    {
+      "id": 18,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "apply",
+      "typeLabel": "Apply",
+      "prompt": "Why does the fresh-SIM test use a brand-new number in an officer’s own name?",
+      "options": [
+        "A new number makes the tool search faster, because it holds fewer records",
+        "Vendors offer free trial searches only for numbers activated very recently",
+        "A new number is the only kind that a licensed HLR look-up can recognise",
+        "A new number is in no old breach, so IMEI or location must be live telecom"
+      ],
+      "correct": 3,
+      "answer": "D",
+      "explanation": "A brand-new number cannot appear in any old breach. If a tool still returns its IMEI, serving cell or location, the data must come from live operator systems. Only the officer’s own data is used.",
+      "slides": [
+        32
+      ]
+    },
+    {
+      "id": 19,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "What did the Supreme Court hold in Pooran Mal v. Director of Inspection (Investigation), Income-tax (1973)?",
+      "options": [
+        "Evidence from an illegal search is always excluded, as under the American rule",
+        "Relevant evidence is not excluded merely because it was illegally obtained",
+        "Leaked documents may be used only if the leak was made by a public servant",
+        "Electronic records need a certificate before they can be relied on in court"
+      ],
+      "correct": 1,
+      "answer": "B",
+      "explanation": "Pooran Mal held that relevant evidence is not excluded merely because it was obtained by an illegal search, unless the Constitution or a statute expressly or by necessary implication excludes it.",
+      "slides": [
+        33
+      ]
+    },
+    {
+      "id": 20,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "evidence",
+      "typeLabel": "Evidence",
+      "prompt": "According to Arjun Panditrao Khotkar (2020), the certificate for secondary electronic evidence is…",
+      "options": [
+        "Optional, if the other side raises no objection to the printout",
+        "Needed only for records held by banks and telecom operators",
+        "A condition precedent to admitting the record in evidence",
+        "Replaced by the oral evidence of the officer who printed it"
+      ],
+      "correct": 2,
+      "answer": "C",
+      "explanation": "Khotkar held that the certificate under Section 65B(4) Evidence Act [now Section 63 BSA] is a condition precedent for admitting secondary electronic evidence; it is not needed only where the original device is produced.",
+      "slides": [
+        36
+      ]
+    },
+    {
+      "id": 21,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "An assessee’s cloud drive and email inbox are ‘virtual digital space’. When may an officer enter them?",
+      "options": [
+        "Only in a search authorised under Section 247 [old Section 132]",
+        "From his desk, if he finds the password in a breach report",
+        "By a call for information under Section 254 [old Section 133B]",
+        "Whenever the DPDP Act exemption for investigation applies"
+      ],
+      "correct": 0,
+      "answer": "A",
+      "explanation": "Section 261(j) of the 2025 Act defines virtual digital space; Section 247 [old Section 132] lets an authorised officer access it during a search. It is never desk OSINT.",
+      "slides": [
+        9,
+        35
+      ]
+    },
+    {
+      "id": 22,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "precaution",
+      "typeLabel": "Precaution",
+      "prompt": "During a lawful search, a pen drive is found holding a customer database leaked from a company. In the three tiers of slide 33, it is…",
+      "options": [
+        "Lead freely — the same as a leak curated and published by journalists",
+        "Avoid personally — the same as data bought from a grey-market bot",
+        "Evidence — because it was seized lawfully, it can be relied on as it is",
+        "Lead; record it — received in duty, with every fact re-established lawfully"
+      ],
+      "correct": 3,
+      "answer": "D",
+      "explanation": "Material that reaches the Department in the course of duty — a seized device, a tip-off — is the middle tier: use it as a lead, record exactly how it arrived, and establish every fact from lawful sources.",
+      "slides": [
+        33
+      ]
+    },
+    {
+      "id": 23,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "law",
+      "typeLabel": "Law",
+      "prompt": "An officer creates a fake profile to befriend a target and see his private posts. Which provisions does this engage?",
+      "options": [
+        "Section 252 Income-tax Act 2025 [old Section 133(6)] and Section 63 BSA",
+        "Section 3(c)(ii) and Section 17(1)(c) of the DPDP Act 2023",
+        "Section 319 BNS [old Sections 416, 419 IPC] and Section 66D IT Act",
+        "Section 159 Income-tax Act 2025 [old Sections 90, 90A] and CRS rules"
+      ],
+      "correct": 2,
+      "answer": "C",
+      "explanation": "A false identity used to deceive someone into granting access is cheating by personation: Section 319 BNS [old Sections 416, 419 IPC], and Section 66D IT Act when done through a computer resource. It is a red line.",
+      "slides": [
+        38
+      ]
+    },
+    {
+      "id": 24,
+      "scenarioId": 5,
+      "section": "direct",
+      "scenarioTitle": "Direct questions",
+      "scenarioText": "",
+      "scenarioSource": "",
+      "type": "evidence",
+      "typeLabel": "Evidence",
+      "prompt": "What does NATGRID’s Gandiva show that a grey-market bot does not?",
+      "options": [
+        "Results within seconds of typing a mobile number into a chat window",
+        "The source of every field, such as VAHAN, SARATHI or CBDT_ITR",
+        "Old passwords from breaches, to help confirm a person’s accounts",
+        "The live location of any handset, without a request to an operator"
+      ],
+      "correct": 1,
+      "answer": "B",
+      "explanation": "Gandiva’s resolved profile tags every field with its source. A bot mixes lawful, licensed, stolen and telecom data in one report and labels nothing.",
+      "slides": [
+        20,
+        22,
+        27
+      ]
+    }
+  ]
+}
